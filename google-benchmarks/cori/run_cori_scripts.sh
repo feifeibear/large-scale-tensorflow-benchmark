@@ -4,8 +4,8 @@ OUTPUT_DIR=outputs
 
 # ./run_dist_benchmarks_daint.sh TF_NUM_PS TF_NUM_WORKER parameter_server/distributed_replicated true/false
 
-./run_dist_benchmarks_cori.sh 6 8 \
-         parameter_server false > \
+./run_dist_benchmarks_cori.sh 8 8 \
+         parameter_server false 1 > \
          $OUTPUT_DIR/2_2_ps_false.out &
 
 #for TF_NUM_WORKER in 256; do

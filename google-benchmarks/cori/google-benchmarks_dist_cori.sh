@@ -5,7 +5,7 @@
 #SBATCH -C knl,quad,cache
 #SBATCH -t 00:12:00
 #SBATCH -L SCRATCH
-#SBATCH -J google_benchmark 
+#SBATCH -J dist 
 #SBATCH --output=dist_inception.%j.log
 
 # Arguments:
@@ -71,13 +71,13 @@ export TF_PS_IN_WORKER=true
 # export TF_PS_IN_WORKER=true
 
 # run distributed TensorFlow
-#DIST_TF_LAUNCHER_DIR=$SCRATCH/fjr/tf
+DIST_TF_LAUNCHER_DIR=$SCRATCH/fjr/tf
 #cd $DIST_TF_LAUNCHER_DIR
 #current_time=$(date)
 #current_time=`echo ${current_time} | sed 's/\ /-/g' | sed 's/://g'` #${current_time// /_}
 #mkdir -p res-$current_time
 #cp run_dist_tf.sh res-$current_time
-cd $DIST_TF_LAUNCHER_DIR 
+cd $DIST_TF_LAUNCHER_DIR
 ./run_dist_tf.sh
 
 # deactivate virtualenv
