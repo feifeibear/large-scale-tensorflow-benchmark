@@ -13,35 +13,27 @@
 # limitations under the License.
 # ==============================================================================
 
-"""Benchmark script for TensorFlow.
+"""Lenet model configuration.
 
-See the README for more information.
+References:
+  LeCun, Yann, Leon Bottou, Yoshua Bengio, and Patrick Haffner
+  Gradient-based learning applied to document recognition
+  Proceedings of the IEEE (1998)
 """
 
-from __future__ import print_function
-
-from absl import flags
-import tensorflow as tf
-
-import benchmark_cnn
-import cnn_util
-from cnn_util import log_fn
-
-benchmark_cnn.define_flags()
-flags.adopt_module_key_flags(benchmark_cnn)
+from models import model
 
 
-def main(_):
-  params = benchmark_cnn.make_params_from_flags()
-  params = benchmark_cnn.setup(params)
-  bench = benchmark_cnn.BenchmarkCNN(params)
+class Lenet5Model(model.Model):
 
-  tfversion = cnn_util.tensorflow_version_tuple()
-  log_fn('TensorFlow:  %i.%i' % (tfversion[0], tfversion[1]))
+  def __init__(self):
+    super(Lenet5Model, self).__init__('lenet5', 28, 32, 0.005)
 
-  bench.print_info()
-  bench.run()
-
-
-if __name__ == '__main__':
-  tf.app.run()
+  def add_inference(self, cnn):
+    # Note: This matches TF's MNIST tutorial model
+    cnn.conv(32, 5, 5)
+    cnn.mpool(2, 2)
+    cnn.conv(64, 5, 5)
+    cnn.mpool(2, 2)
+    cnn.reshape([-1, 64 * 7 * 7])
+    cnn.affine(512)

@@ -12,36 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+"""Trivial model configuration."""
 
-"""Benchmark script for TensorFlow.
-
-See the README for more information.
-"""
-
-from __future__ import print_function
-
-from absl import flags
-import tensorflow as tf
-
-import benchmark_cnn
-import cnn_util
-from cnn_util import log_fn
-
-benchmark_cnn.define_flags()
-flags.adopt_module_key_flags(benchmark_cnn)
+from models import model
 
 
-def main(_):
-  params = benchmark_cnn.make_params_from_flags()
-  params = benchmark_cnn.setup(params)
-  bench = benchmark_cnn.BenchmarkCNN(params)
+class TrivialModel(model.Model):
+  """Trivial model configuration."""
 
-  tfversion = cnn_util.tensorflow_version_tuple()
-  log_fn('TensorFlow:  %i.%i' % (tfversion[0], tfversion[1]))
+  def __init__(self):
+    super(TrivialModel, self).__init__('trivial', 224 + 3, 32, 0.005)
 
-  bench.print_info()
-  bench.run()
+  def add_inference(self, cnn):
+    cnn.reshape([-1, 227 * 227 * 3])
+    cnn.affine(1)
+    cnn.affine(4096)
 
 
-if __name__ == '__main__':
-  tf.app.run()
+class TrivialCifar10Model(model.Model):
+  """Trivial cifar10 model configuration."""
+
+  def __init__(self):
+    super(TrivialCifar10Model, self).__init__('trivial', 32, 32, 0.005)
+
+  def add_inference(self, cnn):
+    cnn.reshape([-1, 32 * 32 * 3])
+    cnn.affine(1)
+    cnn.affine(4096)
