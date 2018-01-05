@@ -40,7 +40,6 @@ nodata_flags="
 --num_gpus=1 \
 --batch_size=64 \
 --data_format=NCHW \
---use_nccl=True \
 --variable_update=$3 \
 --local_parameter_device=cpu \
 --optimizer=sgd \
