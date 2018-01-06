@@ -31,22 +31,12 @@ KMP_BLOCKTIME=1
 export TF_SCRIPT="/global/cscratch1/sd/yyang420/fjr/tensorflow/distributed-tensorflow-benchmarks/google-benchmarks/tf_cnn_benchmarks/tf_cnn_benchmarks.py"
 
 data_flags="
---num_gpus=1 \
---device=cpu \
---batch_size=32 \
---data_format=NHWC \
---variable_update=$3 \
---local_parameter_device=cpu \
---optimizer=sgd \
---model=$5 \
---data_name=imagenet \
---data_dir=/scratch/snx3000/maximem/deeplearnpackages/ImageNet/TF/
 "
 nodata_flags="
 --num_gpus=1 \
 --device=cpu \
 --batch_size=32 \
---data_format=NHWC \
+--data_format=NCHW \
 --kmp_blocktime=1 \
 --kmp_settings=1 \
 --mkl=true \
