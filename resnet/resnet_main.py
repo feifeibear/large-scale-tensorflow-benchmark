@@ -17,6 +17,7 @@
 """
 import time
 import six
+import tempfile
 import sys
 
 import cifar_input
@@ -25,60 +26,92 @@ import resnet_model
 import tensorflow as tf
 
 FLAGS = tf.app.flags.FLAGS
-tf.app.flags.DEFINE_string('dataset', 'cifar10', 'cifar10 or cifar100.')
-tf.app.flags.DEFINE_string('mode', 'train', 'train or eval.')
-tf.app.flags.DEFINE_string('train_data_path', '',
+flags = tf.app.flags
+flags.DEFINE_string('dataset', 'cifar10', 'cifar10 or cifar100.')
+flags.DEFINE_string('mode', 'train', 'train or eval.')
+flags.DEFINE_string('train_data_path', '',
                            'Filepattern for training data.')
-tf.app.flags.DEFINE_string('eval_data_path', '',
+flags.DEFINE_string('eval_data_path', '',
                            'Filepattern for eval data')
-tf.app.flags.DEFINE_integer('image_size', 32, 'Image side length.')
+flags.DEFINE_integer('image_size', 32, 'Image side length.')
 tf.app.flags.DEFINE_string('train_dir', '',
                            'Directory to keep training outputs.')
-tf.app.flags.DEFINE_string('eval_dir', '',
+flags.DEFINE_string('eval_dir', '',
                            'Directory to keep eval outputs.')
-tf.app.flags.DEFINE_integer('eval_batch_count', 50,
+flags.DEFINE_integer('eval_batch_count', 50,
                             'Number of batches to eval.')
-tf.app.flags.DEFINE_bool('eval_once', False,
+flags.DEFINE_bool('eval_once', False,
                          'Whether evaluate the model only once.')
-tf.app.flags.DEFINE_string('log_root', '',
+flags.DEFINE_string('log_root', '',
                            'Directory to keep the checkpoints. Should be a '
                            'parent directory of FLAGS.train_dir/eval_dir.')
-tf.app.flags.DEFINE_integer('num_gpus', 0,
+flags.DEFINE_integer('num_gpus', 0,
                             'Number of gpus used for training. (0 or 1)')
 
+flags.DEFINE_integer("task_index", None,
+                     "Worker task index, should be >= 0. task_index=0 is "
+                     "the master worker task the performs the variable "
+                     "initialization ")
+flags.DEFINE_integer("replicas_to_aggregate", None,
+                     "Number of replicas to aggregate before parameter update"
+                     "is applied (For sync_replicas mode only; default: "
+                     "num_workers)")
+flags.DEFINE_integer("train_steps", 200,
+                     "Number of (global) training steps to perform")
+flags.DEFINE_integer("batch_size", 100, "Training batch size")
+flags.DEFINE_float("learning_rate", 0.01, "Learning rate")
+flags.DEFINE_boolean("sync_replicas", False,
+                     "Use the sync_replicas (synchronized replicas) mode, "
+                     "wherein the parameter updates from workers are aggregated "
+                     "before applied to avoid stale gradients")
+flags.DEFINE_boolean(
+    "existing_servers", False, "Whether servers already exists. If True, "
+    "will use the worker hosts via their GRPC URLs (one client process "
+    "per worker host). Otherwise, will create an in-process TensorFlow "
+    "server.")
+flags.DEFINE_string("ps_hosts","localhost:2222",
+                    "Comma-separated list of hostname:port pairs")
+flags.DEFINE_string("worker_hosts", "localhost:2223,localhost:2224",
+                    "Comma-separated list of hostname:port pairs")
+flags.DEFINE_string("job_name", None,"job name: worker or ps")
 
-def train(hps):
+FLAGS = flags.FLAGS
+
+
+
+def train(hps, server):
   """Training loop."""
+  # Ops : on every worker
   images, labels = cifar_input.build_input(
       FLAGS.dataset, FLAGS.train_data_path, hps.batch_size, FLAGS.mode)
   model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
   model.build_graph()
 
-  param_stats = tf.contrib.tfprof.model_analyzer.print_model_analysis(
-      tf.get_default_graph(),
-      tfprof_options=tf.contrib.tfprof.model_analyzer.
-          TRAINABLE_VARS_PARAMS_STAT_OPTIONS)
-  sys.stdout.write('total_params: %d\n' % param_stats.total_parameters)
+  #param_stats = tf.contrib.tfprof.model_analyzer.print_model_analysis(
+  #    tf.get_default_graph(),
+  #    tfprof_options=tf.contrib.tfprof.model_analyzer.
+  #        TRAINABLE_VARS_PARAMS_STAT_OPTIONS)
+  #sys.stdout.write('total_params: %d\n' % param_stats.total_parameters)
 
-  tf.contrib.tfprof.model_analyzer.print_model_analysis(
-      tf.get_default_graph(),
-      tfprof_options=tf.contrib.tfprof.model_analyzer.FLOAT_OPS_OPTIONS)
+  #tf.contrib.tfprof.model_analyzer.print_model_analysis(
+  #    tf.get_default_graph(),
+  #    tfprof_options=tf.contrib.tfprof.model_analyzer.FLOAT_OPS_OPTIONS)
 
   truth = tf.argmax(model.labels, axis=1)
   predictions = tf.argmax(model.predictions, axis=1)
   precision = tf.reduce_mean(tf.to_float(tf.equal(predictions, truth)))
 
-  summary_hook = tf.train.SummarySaverHook(
-      save_steps=100,
-      output_dir=FLAGS.train_dir,
-      summary_op=tf.summary.merge([model.summaries,
-                                   tf.summary.scalar('Precision', precision)]))
+  #summary_hook = tf.train.SummarySaverHook(
+  #    save_steps=100,
+  #    output_dir=FLAGS.train_dir,
+  #    summary_op=tf.summary.merge([model.summaries,
+  #                                 tf.summary.scalar('Precision', precision)]))
 
-  logging_hook = tf.train.LoggingTensorHook(
-      tensors={'step': model.global_step,
-               'loss': model.cost,
-               'precision': precision},
-      every_n_iter=100)
+  #logging_hook = tf.train.LoggingTensorHook(
+  #    tensors={'step': model.global_step,
+  #             'loss': model.cost,
+  #             'precision': precision},
+  #    every_n_iter=100)
 
   class _LearningRateSetterHook(tf.train.SessionRunHook):
     """Sets learning_rate based on global step."""
@@ -102,16 +135,48 @@ def train(hps):
       else:
         self._lrn_rate = 0.0001
 
-  with tf.train.MonitoredTrainingSession(
-      checkpoint_dir=FLAGS.log_root,
-      hooks=[logging_hook, _LearningRateSetterHook()],
-      chief_only_hooks=[summary_hook],
-      # Since we provide a SummarySaverHook, we need to disable default
-      # SummarySaverHook. To do that we set save_summaries_steps to 0.
-      save_summaries_steps=0,
-      config=tf.ConfigProto(allow_soft_placement=True)) as mon_sess:
-    while not mon_sess.should_stop():
-      mon_sess.run(model.train_op)
+#comments old single Version
+#  with tf.train.MonitoredTrainingSession(
+#      checkpoint_dir=FLAGS.log_root,
+#      hooks=[logging_hook, _LearningRateSetterHook()],
+#      chief_only_hooks=[summary_hook],
+#      # Since we provide a SummarySaverHook, we need to disable default
+#      # SummarySaverHook. To do that we set save_summaries_steps to 0.
+#      save_summaries_steps=0,
+#      config=tf.ConfigProto(allow_soft_placement=True)) as mon_sess:
+#    while not mon_sess.should_stop():
+#      mon_sess.run(model.train_op)
+
+
+  is_chief = (FLAGS.task_index == 0)
+  train_dir = tempfile.mkdtemp()
+  global_step = tf.Variable(0, name="global_step", trainable=False)
+  init_op = tf.global_variables_initializer()
+
+  sv = tf.train.Supervisor(
+      is_chief=is_chief,
+      logdir=train_dir,
+      init_op=init_op,
+      recovery_wait_secs=1,
+      global_step=global_step)
+
+  sess_config = tf.ConfigProto(
+        allow_soft_placement=True,
+        log_device_placement=False,
+        device_filters=["/job:ps", "/job:worker/task:%d" % FLAGS.task_index])
+  if is_chief:
+    print("Worker %d: Initializing session..." % FLAGS.task_index)
+  else:
+    print("Worker %d: Waiting for session to be initialized..." %
+            FLAGS.task_index)
+
+  sess = sv.prepare_or_wait_for_session(server.target, config=sess_config)
+  print("Worker %d: Session initialization complete." % FLAGS.task_index)
+  while(True):
+      _, cost, step = sess.run([model.train_op, model.cost, global_step])
+      print(" step %d : cost %f" % (step, cost))
+      if step >= 100:
+        break
 
 
 def evaluate(hps):
@@ -200,11 +265,50 @@ def main(_):
                              relu_leakiness=0.1,
                              optimizer='mom')
 
-  with tf.device(dev):
+  # add cluster information
+  if FLAGS.job_name is None or FLAGS.job_name == "":
+    raise ValueError("Must specify an explicit `job_name`")
+  if FLAGS.task_index is None or FLAGS.task_index =="":
+    raise ValueError("Must specify an explicit `task_index`")
+
+  print("job name = %s" % FLAGS.job_name)
+  print("task index = %d" % FLAGS.task_index)
+
+  #Construct the cluster and start the server
+  ps_spec = FLAGS.ps_hosts.split(",")
+  worker_spec = FLAGS.worker_hosts.split(",")
+
+  # Get the number of workers.
+  num_workers = len(worker_spec)
+
+  cluster = tf.train.ClusterSpec({
+      "ps": ps_spec,
+      "worker": worker_spec})
+
+  if not FLAGS.existing_servers:
+    # Not using existing servers. Create an in-process server.
+    server = tf.train.Server(
+        cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
+    if FLAGS.job_name == "ps":
+      server.join()
+
+
+
+  with tf.device(
+      tf.train.replica_device_setter(
+          # worker_device=worker_device,
+          # ps_device="/job:ps/cpu:0",
+          cluster=cluster)):
+
     if FLAGS.mode == 'train':
-      train(hps)
-    elif FLAGS.mode == 'eval':
-      evaluate(hps)
+      train(hps, server)
+
+
+#  with tf.device(dev):
+#    if FLAGS.mode == 'train':
+#      train(hps)
+#    elif FLAGS.mode == 'eval':
+#      evaluate(hps)
 
 
 if __name__ == '__main__':
