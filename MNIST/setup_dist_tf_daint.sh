@@ -13,14 +13,15 @@
 # load modules
 module use /apps/daint/UES/6.0.UP02/sandbox-dl/modules/all
 module load daint-gpu
-module load TensorFlow/1.1.0-CrayGNU-2016.11-cuda-8.0-Python-3.5.2
+module load TensorFlow/1.2.1-CrayGNU-17.08-cuda-8.0-python3
 
 # load virtualenv
 export WORKON_HOME=~/Envs
 source $WORKON_HOME/tf-daint/bin/activate
 
 # set TensorFlow script parameters
-export TF_SCRIPT="$HOME/mymnist/dist_deepMNIST_gpu.py"
+# export TF_SCRIPT="$HOME/mymnist/dist_deepMNIST_gpu.py"
+export TF_SCRIPT="./mnist_replica.py"
 
 export TF_FLAGS="
 --num_gpus=1 \
@@ -39,7 +40,9 @@ export TF_NUM_WORKERS=$2 # $SLURM_JOB_NUM_NODES
 # export TF_PS_IN_WORKER=true
 
 # run distributed TensorFlow
-DIST_TF_LAUNCHER_DIR=$SCRATCH/run_dist_tf_daint_directory
+DIST_TF_LAUNCHER_DIR=./log #$SCRATCH/run_dist_tf_daint_directory
+mkdir -p $DIST_TF_LAUNCHER_DIR
+cp run_dist_tf_daint.sh $DIST_TF_LAUNCHER_DIR
 cd $DIST_TF_LAUNCHER_DIR
 ./run_dist_tf_daint.sh
 

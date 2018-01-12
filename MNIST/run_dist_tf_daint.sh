@@ -154,7 +154,7 @@ while [ $running_nodes -lt $num_nodes ]; do
     for (( j=0; j < $((${n_ps_current_node}-1)); j++ )) do
       np="$(cut -d',' -f $(($j+1)) <<<"$current_node_ps")"
       echo "starting ps $ps_task_index: $np"
-      PS_CMD="python ${TF_SCRIPT} --job_name=ps ${TF_DIST_FLAGS} 
+      PS_CMD="python3 ${TF_SCRIPT} --job_name=ps ${TF_DIST_FLAGS} 
               --task_index=${ps_task_index} ${TF_FLAGS} 
               &> ps.${SLURM_JOBID}.${np//:/-}.log &" 
       echo ${PS_CMD} >> $slurm_node_script
@@ -163,11 +163,11 @@ while [ $running_nodes -lt $num_nodes ]; do
     np=$(cut -d',' -f $(($j+1)) <<<"$current_node_ps")
     echo "starting ps $ps_task_index: $np"
     if [ ${n_w_current_node} == 0 ]; then
-      PS_CMD="python ${TF_SCRIPT} --job_name=ps ${TF_DIST_FLAGS} 
+      PS_CMD="python3 ${TF_SCRIPT} --job_name=ps ${TF_DIST_FLAGS} 
               --task_index=${ps_task_index} ${TF_FLAGS} 
               &> ps.${SLURM_JOBID}.${np//:/-}.log"
     else
-      PS_CMD="python ${TF_SCRIPT} --job_name=ps ${TF_DIST_FLAGS} 
+      PS_CMD="python3 ${TF_SCRIPT} --job_name=ps ${TF_DIST_FLAGS} 
               --task_index=${ps_task_index} ${TF_FLAGS} 
               &> ps.${SLURM_JOBID}.${np//:/-}.log &"
     fi
@@ -181,7 +181,7 @@ while [ $running_nodes -lt $num_nodes ]; do
     for (( j=0; j < $((${n_w_current_node}-1)); j++ )) do
       np=$(cut -d',' -f $(($j+1)) <<<"$current_node_w")
       echo "starting worker $w_task_index: $np"
-      WORKER_CMD="python ${TF_SCRIPT} --job_name=worker ${TF_DIST_FLAGS} 
+      WORKER_CMD="python3 ${TF_SCRIPT} --job_name=worker ${TF_DIST_FLAGS} 
                   --task_index=${w_task_index} ${TF_FLAGS} 
                   &> worker.${SLURM_JOBID}.${np//:/-}.log &"
       echo ${WORKER_CMD} >> $slurm_node_script
@@ -189,7 +189,7 @@ while [ $running_nodes -lt $num_nodes ]; do
     done
     np=$(cut -d',' -f $(($j+1)) <<<"$current_node_w")
     echo "starting worker $w_task_index: $np"
-    WORKER_CMD="python ${TF_SCRIPT} --job_name=worker ${TF_DIST_FLAGS} 
+    WORKER_CMD="python3 ${TF_SCRIPT} --job_name=worker ${TF_DIST_FLAGS} 
                 --task_index=${w_task_index} ${TF_FLAGS} 
                 &> worker.${SLURM_JOBID}.${np//:/-}.log"
     echo ${WORKER_CMD} >> $slurm_node_script
