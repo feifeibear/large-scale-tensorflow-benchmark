@@ -29,7 +29,8 @@ export TF_FLAGS="
 --train_steps=20000 \
 --data_format=NCHW \
 --display_every=100 \
---data_dir=./MNIST_data 
+--data_dir=./MNIST_data \
+--sync_replicas=True
 "
 
 # set TensorFlow distributed parameters

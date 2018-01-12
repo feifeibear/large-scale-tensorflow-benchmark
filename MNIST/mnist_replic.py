@@ -88,6 +88,24 @@ FLAGS = flags.FLAGS
 IMAGE_PIXELS = 28
 
 
+
+def mnist_accuracy(logits, labels):
+  """Add to the Graph the Op that calculates the accuracy.
+  Args:
+      logits: Logits tensor, float - [Batch_size, NUM_CLASSES].
+      labels: Labels placeholder - [Batch_size, NUM_CLASSES].
+  Returns:
+      accuracy: The Op for calculating accuracy.
+  """
+  with tf.name_scope('accuracy'):
+    correct_prediction = tf.equal(tf.argmax(logits, 1), tf.argmax(labels, 1))
+    correct_prediction = tf.cast(correct_prediction, tf.float32)
+    accuracy = tf.reduce_mean(correct_prediction)
+
+  return accuracy
+
+
+
 def main(unused_argv):
   mnist = input_data.read_data_sets(FLAGS.data_dir, one_hot=True)
   if FLAGS.download_only:
@@ -134,7 +152,7 @@ def main(unused_argv):
   # The ps use CPU and workers use corresponding GPU
   with tf.device(
       tf.train.replica_device_setter(
-          # worker_device=worker_device,
+          worker_device=worker_device,
           # ps_device="/job:ps/cpu:0",
           cluster=cluster)):
     global_step = tf.Variable(0, name="global_step", trainable=False)
@@ -164,6 +182,7 @@ def main(unused_argv):
 
     y = tf.nn.softmax(tf.nn.xw_plus_b(hid, sm_w, sm_b))
     cross_entropy = -tf.reduce_sum(y_ * tf.log(tf.clip_by_value(y, 1e-10, 1.0)))
+    accuracy = mnist_accuracy(y, y_) 
 
     opt = tf.train.AdamOptimizer(FLAGS.learning_rate)
 
@@ -251,12 +270,13 @@ def main(unused_argv):
       batch_xs, batch_ys = mnist.train.next_batch(FLAGS.batch_size)
       train_feed = {x: batch_xs, y_: batch_ys}
 
-      _, step = sess.run([train_step, global_step], feed_dict=train_feed)
+      _, step, acc_value = sess.run([train_step, global_step, accuracy], feed_dict=train_feed)
       local_step += 1
 
       now = time.time()
       print("%f: Worker %d: training step %d done (global step: %d)" %
             (now, FLAGS.task_index, local_step, step))
+      print("accruay value %f" % acc_value)
 
       if step >= FLAGS.train_steps:
         break
@@ -268,9 +288,9 @@ def main(unused_argv):
 
     # Validation feed
     val_feed = {x: mnist.validation.images, y_: mnist.validation.labels}
-    val_xent = sess.run(cross_entropy, feed_dict=val_feed)
-    print("After %d training step(s), validation cross entropy = %g" %
-          (FLAGS.train_steps, val_xent))
+    val_xent, acc_value = sess.run([cross_entropy, accuracy], feed_dict=val_feed)
+    print("After %d training step(s), validation cross entropy = %g, acc = %f" %
+          (FLAGS.train_steps, val_xent, acc_value))
 
 
 if __name__ == "__main__":
