@@ -81,7 +81,8 @@ FLAGS = flags.FLAGS
 
 def train(hps, server):
   """Training loop."""
-  # Ops : on every worker
+  # Ops : on every worker   
+  print("debug ", FLAGS.train_data_path)
   images, labels = cifar_input.build_input(
       FLAGS.dataset, FLAGS.train_data_path, hps.batch_size, FLAGS.mode)
   model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
@@ -173,10 +174,10 @@ def train(hps, server):
   sess = sv.prepare_or_wait_for_session(server.target, config=sess_config)
   print("Worker %d: Session initialization complete." % FLAGS.task_index)
   while(True):
-      _, cost, step = sess.run([model.train_op, model.cost, global_step])
-      print(" step %d : cost %f" % (step, cost))
-      if step >= 100:
-        break
+    _, cost, step = sess.run([model.train_op, model.cost, global_step])
+    print(" step %d : cost %f" % (step, cost))
+    if step >= 100:
+      break
 
 
 def evaluate(hps):
