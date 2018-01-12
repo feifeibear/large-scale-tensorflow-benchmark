@@ -15,7 +15,9 @@ TF_FLAGS="--train_data_path=./cifar-10-batches-bin/data_batch* \
   --log_root=./tmp/resnet_model \
   --train_dir=./tmp/resnet_model/train \
   --dataset=cifar10 \
-  --num_gpus=0
+  --num_gpus=0 \
+  --batch_size=10 \
+  --sync_replicas=True
 "
 
 # load virtualenv

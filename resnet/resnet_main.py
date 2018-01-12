@@ -150,15 +150,23 @@ def train(hps, server):
 
   is_chief = (FLAGS.task_index == 0)
   train_dir = tempfile.mkdtemp()
-  global_step = tf.Variable(0, name="global_step", trainable=False)
-  init_op = tf.global_variables_initializer()
 
-  sv = tf.train.Supervisor(
-      is_chief=is_chief,
-      logdir=train_dir,
-      init_op=init_op,
-      recovery_wait_secs=1,
-      global_step=global_step)
+  if FLAGS.sync_replicas:
+    sv = tf.train.Supervisor(
+        is_chief=is_chief,
+        logdir=train_dir,
+        init_op=model.init_op,
+        local_init_op=model.local_init_op,
+        ready_for_local_init_op=model.ready_for_local_init_op,
+        recovery_wait_secs=1,
+        global_step=model.global_step)
+  else:
+    sv = tf.train.Supervisor(
+        is_chief=is_chief,
+        logdir=train_dir,
+        init_op=model.init_op,
+        recovery_wait_secs=1,
+        global_step=model.global_step)
 
   sess_config = tf.ConfigProto(
         allow_soft_placement=True,
@@ -172,8 +180,14 @@ def train(hps, server):
 
   sess = sv.prepare_or_wait_for_session(server.target, config=sess_config)
   print("Worker %d: Session initialization complete." % FLAGS.task_index)
+
+  if FLAGS.sync_replicas and is_chief:
+      # Chief worker will start the chief queue runner and call the init op.
+    sess.run(model.sync_init_op)
+    sv.start_queue_runners(sess, [model.chief_queue_runner])
+
   while(True):
-      _, cost, step = sess.run([model.train_op, model.cost, global_step])
+      _, cost, step = sess.run([model.train_op, model.cost, model.global_step])
       print(" step %d : cost %f" % (step, cost))
       if step >= 100:
         break
@@ -238,13 +252,6 @@ def evaluate(hps):
 
 
 def main(_):
-  if FLAGS.num_gpus == 0:
-    dev = '/cpu:0'
-  elif FLAGS.num_gpus == 1:
-    dev = '/gpu:0'
-  else:
-    raise ValueError('Only support 0 or 1 gpu.')
-
   if FLAGS.mode == 'train':
     batch_size = 128
   elif FLAGS.mode == 'eval':
@@ -280,6 +287,7 @@ def main(_):
 
   # Get the number of workers.
   num_workers = len(worker_spec)
+  FLAGS.replicas_to_aggregate = num_workers
 
   cluster = tf.train.ClusterSpec({
       "ps": ps_spec,
@@ -292,11 +300,19 @@ def main(_):
     if FLAGS.job_name == "ps":
       server.join()
 
-
+  if FLAGS.num_gpus > 0:
+    # Avoid gpu allocation conflict: now allocate task_num -> #gpu
+    # for each worker in the corresponding machine
+    gpu = (FLAGS.task_index % FLAGS.num_gpus)
+    worker_device = "/job:worker/task:%d/gpu:%d" % (FLAGS.task_index, gpu)
+  elif FLAGS.num_gpus == 0:
+    # Just allocate the CPU to worker server
+    cpu = 0
+    worker_device = "/job:worker/task:%d/cpu:%d" % (FLAGS.task_index, cpu)
 
   with tf.device(
       tf.train.replica_device_setter(
-          # worker_device=worker_device,
+          worker_device=worker_device,
           # ps_device="/job:ps/cpu:0",
           cluster=cluster)):
 

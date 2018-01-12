@@ -28,6 +28,8 @@ import six
 
 from tensorflow.python.training import moving_averages
 
+FLAGS = tf.app.flags.FLAGS
+
 
 HParams = namedtuple('HParams',
                      'batch_size, num_classes, min_lrn_rate, lrn_rate, '
@@ -138,12 +140,41 @@ class ResNet(object):
     elif self.hps.optimizer == 'mom':
       optimizer = tf.train.MomentumOptimizer(self.lrn_rate, 0.9)
 
+    #dist: add sync 
+    if FLAGS.sync_replicas:
+      if FLAGS.replicas_to_aggregate is None:
+        raise ValueError("Must specify an explicit `replicas_to_aggregate`")
+      else:
+        replicas_to_aggregate = FLAGS.replicas_to_aggregate
+
+      optimizer = tf.train.SyncReplicasOptimizer(
+          optimizer,
+          replicas_to_aggregate=replicas_to_aggregate,
+          total_num_replicas=FLAGS.replicas_to_aggregate,
+          name="resnet_sync_replicas")
+
     apply_op = optimizer.apply_gradients(
         zip(grads, trainable_variables),
         global_step=self.global_step, name='train_step')
-
     train_ops = [apply_op] + self._extra_train_ops
     self.train_op = tf.group(*train_ops)
+
+# dist sync init
+
+    is_chief = (FLAGS.task_index == 0)
+    if FLAGS.sync_replicas:
+      self.local_init_op = optimizer.local_step_init_op
+      if is_chief:
+        self.local_init_op = optimizer.chief_init_op
+
+      self.ready_for_local_init_op = optimizer.ready_for_local_init_op
+
+      # Initial token and chief queue runners required by the sync_replicas mode
+      self.chief_queue_runner = optimizer.get_chief_queue_runner()
+      self.sync_init_op = optimizer.get_init_tokens_op()
+
+    self.init_op = tf.global_variables_initializer()
+
 
   # TODO(xpan): Consider batch_norm in contrib/layers/python/layers/layers.py
   def _batch_norm(self, name, x):
