@@ -21,7 +21,7 @@ source $WORKON_HOME/tf-daint/bin/activate
 
 # set TensorFlow script parameters
 # export TF_SCRIPT="$HOME/mymnist/dist_deepMNIST_gpu.py"
-export TF_SCRIPT="./mnist_replica.py"
+export TF_SCRIPT="/scratch/snx3000/youyang9/fjr/tf_workspace/large-scale-tensorflow-benchmark/MNIST/mnist_replic.py"
 
 export TF_FLAGS="
 --num_gpus=1 \
@@ -41,6 +41,7 @@ export TF_NUM_WORKERS=$2 # $SLURM_JOB_NUM_NODES
 
 # run distributed TensorFlow
 DIST_TF_LAUNCHER_DIR=./log #$SCRATCH/run_dist_tf_daint_directory
+rm -rf $DIST_TF_LAUNCHER_DIR
 mkdir -p $DIST_TF_LAUNCHER_DIR
 cp run_dist_tf_daint.sh $DIST_TF_LAUNCHER_DIR
 cd $DIST_TF_LAUNCHER_DIR
