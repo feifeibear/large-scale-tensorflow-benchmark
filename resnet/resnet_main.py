@@ -190,18 +190,19 @@ def train(hps, server):
     sv.start_queue_runners(sess, [model.chief_queue_runner])
 
   while(True):
-    if step % 10:
-      (cost, predictions, truth, train_step) = sess.run(
-          [model.cost, model.predictions,
+    # _, cost, step = sess.run([model.train_op, model.cost, model.global_step])
+    # print(" step %d : cost %f" % (step, cost))
+    (_, cost, predictions, truth, step) = sess.run(
+          [model.train_op, model.cost, model.predictions,
            model.labels, model.global_step])
 
+    if step % 10 == 0:
       truth = np.argmax(truth, axis=1)
       predictions = np.argmax(predictions, axis=1)
       correct_prediction = np.sum(truth == predictions)
       total_prediction = predictions.shape[0]
       print(" step %d : cost %f, train precision %f" % (step, 1.0 * cost, correct_prediction/total_prediction))
     else:
-      _, cost, step = sess.run([model.train_op, model.cost, model.global_step])
       print(" step %d : cost %f" % (step, cost))
 
     if step >= FLAGS.train_steps:
