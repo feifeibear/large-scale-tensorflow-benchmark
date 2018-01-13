@@ -23,6 +23,7 @@ import sys
 import cifar_input
 import numpy as np
 import resnet_model
+import logist_model
 import tensorflow as tf
 
 FLAGS = tf.app.flags.FLAGS
@@ -84,7 +85,8 @@ def train(hps, server):
   # Ops : on every worker
   images, labels = cifar_input.build_input(
       FLAGS.dataset, FLAGS.train_data_path, hps.batch_size, FLAGS.mode)
-  model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
+  # model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
+  model = logist_model.LRNet(images, labels, FLAGS.mode)
   model.build_graph()
 
   #param_stats = tf.contrib.tfprof.model_analyzer.print_model_analysis(
@@ -187,17 +189,18 @@ def train(hps, server):
     sv.start_queue_runners(sess, [model.chief_queue_runner])
 
   while(True):
-      _, cost, step = sess.run([model.train_op, model.cost, model.global_step])
-      print(" step %d : cost %f" % (step, cost))
-      if step >= 100:
-        break
+    _, cost, step = sess.run([model.train_op, model.cost, model.global_step])
+    print(" step %d : cost %f" % (step, cost))
+    if step >= 100:
+      break
 
 
 def evaluate(hps):
   """Eval loop."""
   images, labels = cifar_input.build_input(
       FLAGS.dataset, FLAGS.eval_data_path, hps.batch_size, FLAGS.mode)
-  model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
+  # model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
+  model = logits_model.ResNet(hps, images, labels, FLAGS.mode)
   model.build_graph()
   saver = tf.train.Saver()
   summary_writer = tf.summary.FileWriter(FLAGS.eval_dir)
