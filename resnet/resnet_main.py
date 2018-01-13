@@ -57,9 +57,9 @@ flags.DEFINE_integer("replicas_to_aggregate", None,
                      "Number of replicas to aggregate before parameter update"
                      "is applied (For sync_replicas mode only; default: "
                      "num_workers)")
-flags.DEFINE_integer("train_steps", 200,
+flags.DEFINE_integer("train_steps", 2000,
                      "Number of (global) training steps to perform")
-flags.DEFINE_integer("batch_size", 100, "Training batch size")
+flags.DEFINE_integer("batch_size", 32, "Training batch size")
 flags.DEFINE_float("learning_rate", 0.01, "Learning rate")
 flags.DEFINE_boolean("sync_replicas", False,
                      "Use the sync_replicas (synchronized replicas) mode, "
@@ -190,9 +190,21 @@ def train(hps, server):
     sv.start_queue_runners(sess, [model.chief_queue_runner])
 
   while(True):
-    _, cost, step = sess.run([model.train_op, model.cost, model.global_step])
-    print(" step %d : cost %f" % (step, cost))
-    if step >= 100:
+    if step % 10:
+      (cost, predictions, truth, train_step) = sess.run(
+          [model.cost, model.predictions,
+           model.labels, model.global_step])
+
+      truth = np.argmax(truth, axis=1)
+      predictions = np.argmax(predictions, axis=1)
+      correct_prediction = np.sum(truth == predictions)
+      total_prediction = predictions.shape[0]
+      print(" step %d : cost %f, train precision %f" % (step, 1.0 * cost, correct_prediction/total_prediction))
+    else:
+      _, cost, step = sess.run([model.train_op, model.cost, model.global_step])
+      print(" step %d : cost %f" % (step, cost))
+
+    if step >= FLAGS.train_steps:
       break
 
 def evaluate(hps):
