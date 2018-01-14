@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=dist_deepMNIST
 #SBATCH --time=00:12:00
-#SBATCH --nodes=8
+#SBATCH --nodes=128
 #SBATCH --constraint=gpu
 #SBATCH --output=dist_deepMNIST.%j.log
 
@@ -31,7 +31,8 @@ export TF_FLAGS="
   --dataset=cifar10 \
   --num_gpus=1 \
   --batch_size=10 \
-  --sync_replicas=True
+  --sync_replicas=True \
+  --train_steps=2000
 "
 
 # set TensorFlow distributed parameters
@@ -42,7 +43,7 @@ export TF_NUM_WORKERS=$2 # $SLURM_JOB_NUM_NODES
 # export TF_PS_IN_WORKER=true
 
 # run distributed TensorFlow
-DIST_TF_LAUNCHER_DIR=./log #$SCRATCH/run_dist_tf_daint_directory
+DIST_TF_LAUNCHER_DIR=./logs/$1-ps-$2-wk-log #$SCRATCH/run_dist_tf_daint_directory
 rm -rf $DIST_TF_LAUNCHER_DIR
 mkdir -p $DIST_TF_LAUNCHER_DIR
 cp run_dist_tf_daint.sh $DIST_TF_LAUNCHER_DIR
