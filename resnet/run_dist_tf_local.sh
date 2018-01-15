@@ -17,7 +17,8 @@ TF_FLAGS="--train_data_path=./cifar-10-batches-bin/data_batch* \
   --dataset=cifar10 \
   --num_gpus=0 \
   --batch_size=10 \
-  --sync_replicas=True
+  --sync_replicas=True \
+  --train_steps=100
 "
 
 # load virtualenv
