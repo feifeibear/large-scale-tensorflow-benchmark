@@ -152,23 +152,27 @@ def train(hps, server):
 
 
   is_chief = (FLAGS.task_index == 0)
-  train_dir = tempfile.mkdtemp()
+  # train_dir = tempfile.mkdtemp()
 
   if FLAGS.sync_replicas:
     sv = tf.train.Supervisor(
         is_chief=is_chief,
-        logdir=train_dir,
+        logdir=FLAGS.log_root,
         init_op=model.init_op,
         local_init_op=model.local_init_op,
         ready_for_local_init_op=model.ready_for_local_init_op,
         recovery_wait_secs=1,
+        save_model_secs=30, 
+        summary_writer=None,
         global_step=model.global_step)
   else:
     sv = tf.train.Supervisor(
         is_chief=is_chief,
-        logdir=train_dir,
+        logdir=FLAGS.log_root,
         init_op=model.init_op,
         recovery_wait_secs=1,
+        save_model_secs=30, 
+        summary_writer=None,
         global_step=model.global_step)
 
   sess_config = tf.ConfigProto(
@@ -188,7 +192,7 @@ def train(hps, server):
       # Chief worker will start the chief queue runner and call the init op.
     sess.run(model.sync_init_op)
     sv.start_queue_runners(sess, [model.chief_queue_runner])
-
+  start_time = time.time();
   while(True):
     # _, cost, step = sess.run([model.train_op, model.cost, model.global_step])
     # print(" step %d : cost %f" % (step, cost))
@@ -203,10 +207,15 @@ def train(hps, server):
       total_prediction = predictions.shape[0]
       print(" step %d : cost %f, train precision %f" % (step, 1.0 * cost, correct_prediction/total_prediction))
     else:
-      print(" step %d : cost %f" % (step, cost))
+      end_time = time.time();
+      print(" time %f, step %d : cost %f" % (end_time - start_time, step, cost))
 
     if step >= FLAGS.train_steps:
       break
+
+  end_time = time.time()
+  print(" time %f s", end_time-start_time)
+  sess.close()
 
 def evaluate(hps):
   """Eval loop."""
