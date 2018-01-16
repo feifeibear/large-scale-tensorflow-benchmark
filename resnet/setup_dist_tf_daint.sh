@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=dist_deepMNIST
 #SBATCH --time=00:12:00
-#SBATCH --nodes=128
+#SBATCH --nodes=8
 #SBATCH --constraint=gpu
 #SBATCH --output=dist_deepMNIST.%j.log
 
