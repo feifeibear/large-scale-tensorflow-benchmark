@@ -162,6 +162,7 @@ class ResNet(object):
 # dist sync init
 
     is_chief = (FLAGS.task_index == 0)
+    self.replicas_hook = optimizer.make_session_run_hook(is_chief)
     if FLAGS.sync_replicas:
       self.local_init_op = optimizer.local_step_init_op
       if is_chief:
