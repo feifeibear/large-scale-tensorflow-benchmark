@@ -212,7 +212,6 @@ def train(hps, server):
 
     if step >= FLAGS.train_steps:
       break
-
   end_time = time.time()
   print(" time %f s", end_time-start_time)
   sess.close()

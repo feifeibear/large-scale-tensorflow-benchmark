@@ -158,7 +158,7 @@ while [ $running_nodes -lt $num_nodes ]; do
       echo "starting ps $ps_task_index: $np"
       PS_CMD="python3 ${TF_SCRIPT} --job_name=ps ${TF_DIST_FLAGS} 
               --task_index=${ps_task_index} ${TF_FLAGS} 
-              &> ps.${SLURM_JOBID}.${np//:/-}.log &" 
+              > ps.${SLURM_JOBID}.${np//:/-}.log 2>&1 &" 
       echo ${PS_CMD} >> $slurm_node_script
       ps_task_index=$((${ps_task_index}+1))
     done
@@ -167,11 +167,11 @@ while [ $running_nodes -lt $num_nodes ]; do
     if [ ${n_w_current_node} == 0 ]; then
       PS_CMD="python3 ${TF_SCRIPT} --job_name=ps ${TF_DIST_FLAGS} 
               --task_index=${ps_task_index} ${TF_FLAGS} 
-              &> ps.${SLURM_JOBID}.${np//:/-}.log"
+              > ps.${SLURM_JOBID}.${np//:/-}.log 2>&1 "
     else
       PS_CMD="python3 ${TF_SCRIPT} --job_name=ps ${TF_DIST_FLAGS} 
               --task_index=${ps_task_index} ${TF_FLAGS} 
-              &> ps.${SLURM_JOBID}.${np//:/-}.log &"
+              > ps.${SLURM_JOBID}.${np//:/-}.log 2>&1 &"
     fi
     echo ${PS_CMD} >> $slurm_node_script
     ps_task_index=$((${ps_task_index}+1))
@@ -185,7 +185,7 @@ while [ $running_nodes -lt $num_nodes ]; do
       echo "starting worker $w_task_index: $np"
       WORKER_CMD="python3 ${TF_SCRIPT} --job_name=worker ${TF_DIST_FLAGS} 
                   --task_index=${w_task_index} ${TF_FLAGS} 
-                  &> worker.${SLURM_JOBID}.${np//:/-}.log &"
+                  > worker.${SLURM_JOBID}.${np//:/-}.log 2>&1 &"
       echo ${WORKER_CMD} >> $slurm_node_script
       w_task_index=$((${w_task_index}+1))
     done
@@ -193,7 +193,7 @@ while [ $running_nodes -lt $num_nodes ]; do
     echo "starting worker $w_task_index: $np"
     WORKER_CMD="python3 ${TF_SCRIPT} --job_name=worker ${TF_DIST_FLAGS} 
                 --task_index=${w_task_index} ${TF_FLAGS} 
-                &> worker.${SLURM_JOBID}.${np//:/-}.log"
+                > worker.${SLURM_JOBID}.${np//:/-}.log 2>&1 "
     echo ${WORKER_CMD} >> $slurm_node_script
     w_task_index=$((${w_task_index}+1))
   fi
@@ -213,7 +213,7 @@ SLURM_EVALER_HOSTS=$(scontrol show hostnames ${SLURM_NODELIST} |
                        head --bytes -1)
 current_node=$SLURM_EVALER_HOSTS
 TF_EVALER_HOSTS="${SLURM_JOB_NUM_NODES}:2220"
-WORKER_CMD="python3 ${TF_EVAL_SCRIPT} ${TF_EVAL_FLAGS} &> eval.${SLURM_JOBID}.${np//:/-}.log"
+WORKER_CMD="python3 ${TF_EVAL_SCRIPT} ${TF_EVAL_FLAGS} > eval.${SLURM_JOBID}.${np//:/-}.log 2>&1 &"
 slurm_node_script=.tfdist.${SLURM_JOBID}.${current_node}.sh
 echo "#!/bin/bash" > $slurm_node_script
 echo "cvd=\${CUDA_VISIBLE_DEVICES};CUDA_VISIBLE_DEVICES=" >> $slurm_node_script

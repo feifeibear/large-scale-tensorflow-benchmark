@@ -1,10 +1,10 @@
 #!/bin/bash
 
 #SBATCH --job-name=dist_deepMNIST
-#SBATCH --time=00:12:00
-#SBATCH --nodes=8
+#SBATCH --time=00:60:00
+#SBATCH --nodes=9
 #SBATCH --constraint=gpu
-#SBATCH --output=dist_deepMNIST.%j.log
+#SBATCH --output=dist_cifar.%j.log
 
 # Arguments:
 #   $1: TF_NUM_PS: number of parameter servers
@@ -34,7 +34,7 @@ export TF_FLAGS="
   --num_gpus=1 \
   --batch_size=16 \
   --sync_replicas=True \
-  --train_steps=2000
+  --train_steps=80000
 "
 
 export TF_EVAL_FLAGS="
