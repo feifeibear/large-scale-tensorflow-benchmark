@@ -9,25 +9,26 @@
 # set TensorFlow script parameters
 TF_DIST_FLAGS=" --ps_hosts=$3 --worker_hosts=$4"
 
-TF_SCRIPT_DIR=$HOME/Dropbox/cscs/tensorflow-benchmarks/MNIST
-TF_SCRIPT=$TF_SCRIPT_DIR/dist_deepMNIST_gpu.py
+TF_SCRIPT_DIR=/Users/fang/Documents/01-Code/large-scale-tensorflow-benchmark/MNIST
+TF_SCRIPT=$TF_SCRIPT_DIR/mnist_replic.py
 
-TF_FLAGS="
---batch_size=50 \
---train_steps=100 \
+export TF_FLAGS="
 --num_gpus=0 \
---data_format=NHWC \
---display_every=25 \
---sync_replicas=False \
---data_dir=./MNIST_data
+--batch_size=50 \
+--train_steps=20000 \
+--data_format=NCHW \
+--display_every=100 \
+--data_dir=./MNIST_data 
 "
 
+
 # load virtualenv
-export WORKON_HOME=$HOME/Envs
-source $WORKON_HOME/tf-local/bin/activate
+#export WORKON_HOME=$HOME/Envs
+#source $WORKON_HOME/tf-local/bin/activate
 
 # train inception
-python ${TF_SCRIPT} --job_name=$1 --task_index=$2 ${TF_DIST_FLAGS} ${TF_FLAGS}
+python3 ${TF_SCRIPT} --job_name=$1 --task_index=$2 ${TF_DIST_FLAGS} ${TF_FLAGS}
+
 
 # deactivate virtualenv
-deactivate
+#deactivate

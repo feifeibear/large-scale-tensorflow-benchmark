@@ -25,7 +25,7 @@ RUN_TF_SCRIPT=run_dist_tf_local.sh
 echo "starting PSs..."
 for running_ps in `seq 1 $TF_NUM_PS`; do
   ps_idx=$(($running_ps - 1))
-  gnome-terminal -x sh -c "./$RUN_TF_SCRIPT ps $ps_idx $TF_PS_HOSTS $TF_WORKER_HOSTS; bash"
+  ./$RUN_TF_SCRIPT ps $ps_idx $TF_PS_HOSTS $TF_WORKER_HOSTS 2&> ps.log &
 done
 
 # start WORKERs
@@ -33,7 +33,7 @@ echo "starting WORKERs..."
 running_w=0
 for running_w in `seq 1 $((TF_NUM_WORKER - 1))`; do
   w_idx=$(($running_w - 1))
-  gnome-terminal -x sh -c "./$RUN_TF_SCRIPT worker $w_idx $TF_PS_HOSTS $TF_WORKER_HOSTS; bash"
+  ./$RUN_TF_SCRIPT worker $w_idx $TF_PS_HOSTS $TF_WORKER_HOSTS &> wk1.log &
 done
 w_idx=$running_w
-./$RUN_TF_SCRIPT worker $w_idx $TF_PS_HOSTS $TF_WORKER_HOSTS
+./$RUN_TF_SCRIPT worker $w_idx $TF_PS_HOSTS $TF_WORKER_HOSTS &> wk2.log
