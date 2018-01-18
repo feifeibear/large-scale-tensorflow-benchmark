@@ -200,7 +200,7 @@ while [ $running_nodes -lt $num_nodes ]; do
 
   chmod +x $slurm_node_script
   if [ $((${running_nodes} + 1)) == $num_nodes ]; then
-    srun --no-kill --nodelist $current_node -n 1 -N 1 $slurm_node_script 
+    srun --no-kill --nodelist $current_node -n 1 -N 1 $slurm_node_script & 
   else
     srun --no-kill --nodelist $current_node -n 1 -N 1 $slurm_node_script &
   fi
@@ -213,7 +213,7 @@ SLURM_EVALER_HOSTS=$(scontrol show hostnames ${SLURM_NODELIST} |
                        head --bytes -1)
 current_node=$SLURM_EVALER_HOSTS
 TF_EVALER_HOSTS="${SLURM_JOB_NUM_NODES}:2220"
-WORKER_CMD="python3 ${TF_EVAL_SCRIPT} ${TF_EVAL_FLAGS} > eval.${SLURM_JOBID}.${np//:/-}.log 2>&1 &"
+WORKER_CMD="python3 ${TF_EVAL_SCRIPT} ${TF_EVAL_FLAGS} > eval.${SLURM_JOBID}.${np//:/-}.log 2>&1"
 slurm_node_script=.tfdist.${SLURM_JOBID}.${current_node}.sh
 echo "#!/bin/bash" > $slurm_node_script
 echo "cvd=\${CUDA_VISIBLE_DEVICES};CUDA_VISIBLE_DEVICES=" >> $slurm_node_script

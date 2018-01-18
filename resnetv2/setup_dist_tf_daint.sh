@@ -13,7 +13,8 @@
 # load modules
 module use /apps/daint/UES/6.0.UP02/sandbox-dl/modules/all
 module load daint-gpu
-module load TensorFlow/1.2.1-CrayGNU-17.08-cuda-8.0-python3
+#module load TensorFlow/1.2.1-CrayGNU-17.08-cuda-8.0-python3
+module load TensorFlow/1.3.0-CrayGNU-17.08-cuda-8.0-python3
 
 # load virtualenv
 export WORKON_HOME=~/Envs
