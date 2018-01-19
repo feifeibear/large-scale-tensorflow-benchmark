@@ -61,6 +61,8 @@ flags.DEFINE_integer("replicas_to_aggregate", None,
                      "num_workers)")
 flags.DEFINE_integer("train_steps", 200,
                      "Number of (global) training steps to perform")
+flags.DEFINE_integer("num_epochs", 90,
+                     "Number of (global) training steps to perform")
 flags.DEFINE_integer("batch_size", 128, "Training batch size")
 flags.DEFINE_float("learning_rate", 0.01, "Learning rate")
 flags.DEFINE_boolean("sync_replicas", False,
@@ -186,7 +188,7 @@ def train(hps, server):
   # a imagent reader get images and labels
   # images, labels = cifar_input.build_input(
   #     FLAGS.dataset, FLAGS.train_data_path, hps.batch_size, FLAGS.mode)
-  images, labels = input_fn(True, FLAGS.train_data_path, FLAGS.batch_size)
+  images, labels = input_fn(True, FLAGS.train_data_path, FLAGS.batch_size, FLAGS.num_epochs)
 
   model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
   # model = logist_model.LRNet(images, labels, FLAGS.mode)

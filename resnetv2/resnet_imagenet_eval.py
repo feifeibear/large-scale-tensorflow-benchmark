@@ -47,7 +47,8 @@ tf.app.flags.DEFINE_string('log_root', '',
                            'parent directory of FLAGS.train_dir/eval_dir.')
 tf.app.flags.DEFINE_integer('num_gpus', 0,
                             'Number of gpus used for training. (0 or 1)')
-
+flags.DEFINE_integer("num_epochs", 3000,
+                     "Number of (global) training steps to perform")
 _DEFAULT_IMAGE_SIZE = 224
 _NUM_CHANNELS = 3
 _LABEL_CLASSES = 1001
@@ -149,7 +150,7 @@ def input_fn(is_training, data_dir, batch_size, num_epochs=1):
 
 def evaluate(hps):
   """Eval loop."""
-  images, labels = input_fn(False, FLAGS.eval_data_path, hps.batch_size)
+  images, labels = input_fn(False, FLAGS.eval_data_path, hps.batch_size, FLAGS.num_epochs)
   #images, labels = cifar_input.build_input(
   #    FLAGS.dataset, FLAGS.eval_data_path, hps.batch_size, FLAGS.mode)
   model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
