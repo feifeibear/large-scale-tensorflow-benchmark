@@ -25,12 +25,12 @@ import cifar_input
 import numpy as np
 import resnet_model
 import logist_model
-import vgg_preprocessing 
+import vgg_preprocessin 
 import tensorflow as tf
 
 FLAGS = tf.app.flags.FLAGS
 flags = tf.app.flags
-flags.DEFINE_string('dataset', 'cifar10', 'cifar10 or cifar100 or Imagenet.')
+flags.DEFINE_string('dataset', 'cifar10', 'cifar10 or cifar100 or imagenet.')
 flags.DEFINE_string('mode', 'train', 'train or eval.')
 flags.DEFINE_string('train_data_path', '',
                            'Filepattern for training data.')
@@ -59,9 +59,9 @@ flags.DEFINE_integer("replicas_to_aggregate", None,
                      "Number of replicas to aggregate before parameter update"
                      "is applied (For sync_replicas mode only; default: "
                      "num_workers)")
-flags.DEFINE_integer("train_steps", 2000,
+flags.DEFINE_integer("train_steps", 200,
                      "Number of (global) training steps to perform")
-flags.DEFINE_integer("batch_size", 32, "Training batch size")
+flags.DEFINE_integer("batch_size", 128, "Training batch size")
 flags.DEFINE_float("learning_rate", 0.01, "Learning rate")
 flags.DEFINE_boolean("sync_replicas", False,
                      "Use the sync_replicas (synchronized replicas) mode, "
@@ -216,13 +216,13 @@ def train(hps, server):
       tensors={'step': model.global_step,
                'loss': model.cost,
                'precision': precision},
-      every_n_iter=1)
+      every_n_iter=40)
 
   class _LearningRateSetterHook(tf.train.SessionRunHook):
     """Sets learning_rate based on global step."""
 
     def begin(self):
-      self._lrn_rate = 0.1
+      self._lrn_rate = 0.4
 
     def before_run(self, run_context):
       return tf.train.SessionRunArgs(
@@ -230,15 +230,16 @@ def train(hps, server):
           feed_dict={model.lrn_rate: self._lrn_rate})  # Sets learning rate
 
     def after_run(self, run_context, run_values):
+      #intel resnet_50_8_nodes version
       train_step = run_values.results
-      if train_step < 40000:
-        self._lrn_rate = 0.1
-      elif train_step < 60000:
-        self._lrn_rate = 0.01
-      elif train_step < 80000:
-        self._lrn_rate = 0.001
+      if train_step < 37440:
+        self._lrn_rate = 0.4
+      elif train_step < 74880:
+        self._lrn_rate = 0.1 * 0.4
+      elif train_step < 99840:
+        self._lrn_rate = 0.01 * 0.4
       else:
-        self._lrn_rate = 0.0001
+        self._lrn_rate = 0.001 * 0.4
 
   is_chief = (FLAGS.task_index == 0)
 #comments old single Version
@@ -246,7 +247,8 @@ def train(hps, server):
       master=server.target,
       is_chief=is_chief,
       checkpoint_dir=FLAGS.log_root,
-      hooks=[logging_hook, _LearningRateSetterHook()],
+      hooks=[tf.train.StopAtStepHook(last_step=FLAGS.train_steps),
+          logging_hook, _LearningRateSetterHook()],
       chief_only_hooks=[model.replicas_hook, summary_hook],
       # Since we provide a SummarySaverHook, we need to disable default
       # SummarySaverHook. To do that we set save_summaries_steps to 0.
@@ -339,7 +341,7 @@ def main(_):
                              lrn_rate=0.1,
                              num_residual_units=5,
                              use_bottleneck=False,
-                             weight_decay_rate=0.0002,
+                             weight_decay_rate=0.0001,
                              relu_leakiness=0.1,
                              optimizer='mom')
 

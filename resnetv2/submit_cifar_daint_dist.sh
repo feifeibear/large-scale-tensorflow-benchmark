@@ -56,12 +56,13 @@ export TF_NUM_WORKERS=$2 # $SLURM_JOB_NUM_NODES
 # export TF_PS_IN_WORKER=true
 
 # run distributed TensorFlow
+DIST_TF_LAUNCHER_SCRIPT=run_dist_train_eval_daint.sh
 DIST_TF_LAUNCHER_DIR=./logs/$1-ps-$2-wk-${DATASET}-log #$SCRATCH/run_dist_tf_daint_directory
 rm -rf $DIST_TF_LAUNCHER_DIR
 mkdir -p $DIST_TF_LAUNCHER_DIR
-cp run_dist_tf_eval_daint.sh $DIST_TF_LAUNCHER_DIR
+cp ${DIST_TF_LAUNCHER_SCRIPT} $DIST_TF_LAUNCHER_DIR
 cd $DIST_TF_LAUNCHER_DIR
-./run_dist_tf_eval_daint.sh
+./${DIST_TF_LAUNCHER_SCRIPT}
 
 # deactivate virtualenv
 deactivate

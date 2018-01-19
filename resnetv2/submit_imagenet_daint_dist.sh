@@ -22,8 +22,8 @@ source $WORKON_HOME/tf-daint/bin/activate
 
 # set TensorFlow script parameters
 # export TF_SCRIPT="$HOME/mymnist/dist_deepMNIST_gpu.py"
-export TF_SCRIPT="/scratch/snx3000/youyang9/fjr/tf_workspace/large-scale-tensorflow-benchmark/resnetv2/resnet_imagenet_main.py"
-export WORK_DIR="/scratch/snx3000/youyang9/fjr/tf_workspace/large-scale-tensorflow-benchmark/resnetv2"
+export WORK_DIR=`pwd`
+export TF_SCRIPT="${WORK_DIR}/resnet_imagenet_main.py"
 export DATASET=imagenet
 
 export TF_FLAGS="
@@ -31,10 +31,20 @@ export TF_FLAGS="
   --log_root=./tmp/resnet_model \
   --train_dir=./tmp/resnet_model/train \
   --dataset=${DATASET} \
+  --mode=train \
   --num_gpus=1 \
-  --batch_size=32 \
+  --batch_size=128 \
   --sync_replicas=True \
-  --train_steps=100
+  --train_steps=2000
+"
+
+export TF_EVAL_FLAGS="
+  --eval_data_path=${SCRATCH}/data/imagenet \
+  --log_root=./tmp/resnet_model \
+  --train_dir=./tmp/resnet_model/test \
+  --dataset=${DATASET} \
+  --mode=eval \
+  --num_gpus=1
 "
 
 # set TensorFlow distributed parameters
@@ -46,11 +56,12 @@ export TF_NUM_WORKERS=$2 # $SLURM_JOB_NUM_NODES
 
 # run distributed TensorFlow
 DIST_TF_LAUNCHER_DIR=./logs/$1-ps-$2-wk-${DATASET}-log #$SCRATCH/run_dist_tf_daint_directory
+DIST_TF_LAUNCHER_SCRIPT=run_dist_train_eval_daint.sh
 rm -rf $DIST_TF_LAUNCHER_DIR
 mkdir -p $DIST_TF_LAUNCHER_DIR
-cp run_dist_tf_daint.sh $DIST_TF_LAUNCHER_DIR
+cp $DIST_TF_LAUNCHER_SCRIPT $DIST_TF_LAUNCHER_DIR
 cd $DIST_TF_LAUNCHER_DIR
-./run_dist_tf_daint.sh
+./$DIST_TF_LAUNCHER_SCRIPT
 
 # deactivate virtualenv
 deactivate
