@@ -71,7 +71,11 @@ class ResNet(object):
 
   def _build_model(self):
     """Build the core model within the graph."""
-    network = resnet_model_official.cifar10_resnet_v2_generator(resnet_size= 50, num_classes = 10, data_format=None)
+    if FLAGS.dataset == 'cifar10':
+      network = resnet_model_official.cifar10_resnet_v2_generator(resnet_size= 50, num_classes = 10, data_format=None)
+    else FLAGS.dataset == 'imagenet':
+      imagenet_resnet_v2(resnet_size = 50, num_classes = 1001, data_format=None):
+
     logits = network(self._images, True)
     self.predictions = tf.nn.softmax(logits)
     cross_entropy = tf.losses.softmax_cross_entropy(
