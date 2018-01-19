@@ -19,11 +19,13 @@ import time
 import six
 import tempfile
 import sys
+import os
 
 import cifar_input
 import numpy as np
 import resnet_model
 import logist_model
+import vgg_preprocessing 
 import tensorflow as tf
 
 FLAGS = tf.app.flags.FLAGS
@@ -184,7 +186,7 @@ def train(hps, server):
   # a imagent reader get images and labels
   # images, labels = cifar_input.build_input(
   #     FLAGS.dataset, FLAGS.train_data_path, hps.batch_size, FLAGS.mode)
-  images, labels = input_fn(true, FLAGS.train_data_path, FLAGS.batch_size)
+  images, labels = input_fn(True, FLAGS.train_data_path, FLAGS.batch_size)
 
   model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
   # model = logist_model.LRNet(images, labels, FLAGS.mode)

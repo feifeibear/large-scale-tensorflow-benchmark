@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=dist_deepMNIST
 #SBATCH --time=00:60:00
-#SBATCH --nodes=9
+#SBATCH --nodes=16
 #SBATCH --constraint=gpu
 #SBATCH --output=dist_cifar.%j.log
 
@@ -22,9 +22,8 @@ source $WORKON_HOME/tf-daint/bin/activate
 
 # set TensorFlow script parameters
 # export TF_SCRIPT="$HOME/mymnist/dist_deepMNIST_gpu.py"
-export TF_SCRIPT="/scratch/snx3000/youyang9/fjr/tf_workspace/large-scale-tensorflow-benchmark/resnet/resnet_main.py"
-export TF_EVAL_SCRIPT="/scratch/snx3000/youyang9/fjr/tf_workspace/large-scale-tensorflow-benchmark/resnet/resnet_eval.py"
-export WORK_DIR="/scratch/snx3000/youyang9/fjr/tf_workspace/large-scale-tensorflow-benchmark/resnet"
+export TF_SCRIPT="/scratch/snx3000/youyang9/fjr/tf_workspace/large-scale-tensorflow-benchmark/resnetv2/resnet_imagenet_main.py"
+export WORK_DIR="/scratch/snx3000/youyang9/fjr/tf_workspace/large-scale-tensorflow-benchmark/resnetv2"
 export DATASET=imagenet
 
 export TF_FLAGS="
@@ -39,7 +38,7 @@ export TF_FLAGS="
 "
 
 # set TensorFlow distributed parameters
-export TF_NUM_PS=$2 # 1
+export TF_NUM_PS=$1 # 1
 export TF_NUM_WORKERS=$2 # $SLURM_JOB_NUM_NODES
 # export TF_WORKER_PER_NODE=1
 # export TF_PS_PER_NODE=1
