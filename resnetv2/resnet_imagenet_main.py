@@ -25,7 +25,7 @@ import cifar_input
 import numpy as np
 import resnet_model
 import logist_model
-import vgg_preprocessin 
+import vgg_preprocessing 
 import tensorflow as tf
 
 FLAGS = tf.app.flags.FLAGS

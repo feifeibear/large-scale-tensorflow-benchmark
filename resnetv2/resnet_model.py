@@ -65,10 +65,6 @@ class ResNet(object):
       self._build_train_op()
     self.summaries = tf.summary.merge_all()
 
-  def _stride_arr(self, stride):
-    """Map a stride scalar to the stride array for tf.nn.conv2d."""
-    return [1, stride, stride, 1]
-
   def _build_model(self):
     """Build the core model within the graph."""
     if FLAGS.dataset == 'cifar10':

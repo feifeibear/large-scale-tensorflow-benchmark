@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#SBATCH --job-name=dist_deepMNIST
+#SBATCH --job-name=imagenet
 #SBATCH --time=00:60:00
 #SBATCH --nodes=16
 #SBATCH --constraint=gpu
-#SBATCH --output=dist_cifar.%j.log
+#SBATCH --output=slurm_imagenet.%j.log
 
 # Arguments:
 #   $1: TF_NUM_PS: number of parameter servers
@@ -24,6 +24,7 @@ source $WORKON_HOME/tf-daint/bin/activate
 # export TF_SCRIPT="$HOME/mymnist/dist_deepMNIST_gpu.py"
 export WORK_DIR=`pwd`
 export TF_SCRIPT="${WORK_DIR}/resnet_imagenet_main.py"
+export TF_EVAL_SCRIPT="${WORK_DIR}/resnet_imagenet_eval.py"
 export DATASET=imagenet
 
 export TF_FLAGS="

@@ -216,7 +216,7 @@ TF_EVALER_HOSTS="${SLURM_JOB_NUM_NODES}:2220"
 WORKER_CMD="python3 ${TF_EVAL_SCRIPT} ${TF_EVAL_FLAGS} > eval.${SLURM_JOBID}.${np//:/-}.log 2>&1"
 slurm_node_script=.tfdist.${SLURM_JOBID}.${current_node}.sh
 echo "#!/bin/bash" > $slurm_node_script
-echo "cvd=\${CUDA_VISIBLE_DEVICES};CUDA_VISIBLE_DEVICES=" >> $slurm_node_script
+echo "cvd=\${CUDA_VISIBLE_DEVICES};CUDA_VISIBLE_DEVICES=\${cvd}" >> $slurm_node_script
 echo ${WORKER_CMD} >> $slurm_node_script
 chmod +x $slurm_node_script
 srun --no-kill --nodelist $current_node -n 1 -N 1 $slurm_node_script
