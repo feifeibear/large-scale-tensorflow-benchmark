@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #SBATCH --job-name=imagenet
-#SBATCH --time=00:60:00
-#SBATCH --nodes=16
+#SBATCH --time=02:30:00
+#SBATCH --nodes=9
 #SBATCH --constraint=gpu
 #SBATCH --output=slurm_imagenet.%j.log
 
@@ -36,7 +36,7 @@ export TF_FLAGS="
   --num_gpus=1 \
   --batch_size=128 \
   --sync_replicas=True \
-  --train_steps=2000 \
+  --train_steps=112600 \
   --num_epochs=90
 "
 
@@ -47,7 +47,7 @@ export TF_EVAL_FLAGS="
   --dataset=${DATASET} \
   --mode=eval \
   --num_gpus=1 \
-  --num_epochs= 3000
+  --num_epochs=3000
 "
 
 # set TensorFlow distributed parameters
@@ -60,8 +60,10 @@ export TF_NUM_WORKERS=$2 # $SLURM_JOB_NUM_NODES
 # run distributed TensorFlow
 DIST_TF_LAUNCHER_DIR=./logs/$1-ps-$2-wk-${DATASET}-log #$SCRATCH/run_dist_tf_daint_directory
 DIST_TF_LAUNCHER_SCRIPT=run_dist_train_eval_daint.sh
-rm -rf $DIST_TF_LAUNCHER_DIR
+# rm -rf $DIST_TF_LAUNCHER_DIR
 mkdir -p $DIST_TF_LAUNCHER_DIR
+rm -rf $DIST_TF_LAUNCHER_DIR/*.log
+rm -rf $DIST_TF_LAUNCHER_DIR/*.sh
 cp $DIST_TF_LAUNCHER_SCRIPT $DIST_TF_LAUNCHER_DIR
 cd $DIST_TF_LAUNCHER_DIR
 ./$DIST_TF_LAUNCHER_SCRIPT

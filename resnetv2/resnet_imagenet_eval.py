@@ -47,8 +47,9 @@ tf.app.flags.DEFINE_string('log_root', '',
                            'parent directory of FLAGS.train_dir/eval_dir.')
 tf.app.flags.DEFINE_integer('num_gpus', 0,
                             'Number of gpus used for training. (0 or 1)')
-flags.DEFINE_integer("num_epochs", 3000,
+tf.app.flags.DEFINE_integer("num_epochs", 3000,
                      "Number of (global) training steps to perform")
+
 _DEFAULT_IMAGE_SIZE = 224
 _NUM_CHANNELS = 3
 _LABEL_CLASSES = 1001
@@ -240,10 +241,7 @@ def main(_):
                              optimizer='mom')
 
   with tf.device(dev):
-    if FLAGS.mode == 'train':
-      train(hps)
-    elif FLAGS.mode == 'eval':
-      evaluate(hps)
+    evaluate(hps)
 
 
 if __name__ == '__main__':
