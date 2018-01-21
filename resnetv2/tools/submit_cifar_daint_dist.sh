@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=dist_deepMNIST
-#SBATCH --time=00:60:00
+#SBATCH --time=3:30:00
 #SBATCH --nodes=9
 #SBATCH --constraint=gpu
 #SBATCH --output=dist_cifar.%j.log
@@ -28,7 +28,7 @@ export TF_EVAL_SCRIPT="${WORK_DIR}/resnet_eval.py"
 export DATASET=cifar10
 
 export TF_FLAGS="
-  --train_data_path=${WORK_DIR}/cifar-10-batches-bin/data_batch* \
+  --train_data_path=${SCRATCH}/data/cifar-10-batches-bin/data_batch* \
   --log_root=./tmp/resnet_model \
   --train_dir=./tmp/resnet_model/train \
   --dataset=${DATASET} \
@@ -39,9 +39,9 @@ export TF_FLAGS="
 "
 
 export TF_EVAL_FLAGS="
-  --eval_data_path=${WORK_DIR}/cifar-10-batches-bin/test_batch* \
+  --eval_data_path=${SCRATCH}/data/cifar-10-batches-bin/test_batch* \
   --log_root=./tmp/resnet_model \
-  --train_dir=./tmp/resnet_model/test \
+  --eval_dir=./tmp/resnet_model/test \
   --dataset=${DATASET} \
   --mode=eval \
   --num_gpus=1
@@ -58,7 +58,8 @@ export TF_NUM_WORKERS=$2 # $SLURM_JOB_NUM_NODES
 # run distributed TensorFlow
 DIST_TF_LAUNCHER_SCRIPT=run_dist_train_eval_daint.sh
 DIST_TF_LAUNCHER_DIR=./logs/$1-ps-$2-wk-${DATASET}-log #$SCRATCH/run_dist_tf_daint_directory
-rm -rf $DIST_TF_LAUNCHER_DIR
+rm -rf $DIST_TF_LAUNCHER_DIR/*.log
+rm -rf $DIST_TF_LAUNCHER_DIR/*.sh
 mkdir -p $DIST_TF_LAUNCHER_DIR
 cp ${DIST_TF_LAUNCHER_SCRIPT} $DIST_TF_LAUNCHER_DIR
 cd $DIST_TF_LAUNCHER_DIR

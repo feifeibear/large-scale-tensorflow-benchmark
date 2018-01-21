@@ -133,10 +133,8 @@ def train(hps, server):
         self._lrn_rate = 0.1
       elif train_step < 60000:
         self._lrn_rate = 0.01
-      elif train_step < 80000:
-        self._lrn_rate = 0.001
       else:
-        self._lrn_rate = 0.0001
+        self._lrn_rate = 0.001
 
   is_chief = (FLAGS.task_index == 0)
 #comments old single Version
@@ -152,71 +150,6 @@ def train(hps, server):
       config=tf.ConfigProto(allow_soft_placement=True)) as mon_sess:
     while not mon_sess.should_stop():
       mon_sess.run(model.train_op)
-
-
-  # train_dir = tempfile.mkdtemp()
-
-  #  if FLAGS.sync_replicas:
-  #    sv = tf.train.Supervisor(
-  #        is_chief=is_chief,
-  #        logdir=FLAGS.log_root,
-  #        init_op=model.init_op,
-  #        local_init_op=model.local_init_op,
-  #        ready_for_local_init_op=model.ready_for_local_init_op,
-  #        recovery_wait_secs=1,
-  #        save_model_secs=30, 
-  #        summary_writer=None,
-  #        global_step=model.global_step)
-  #  else:
-  #    sv = tf.train.Supervisor(
-  #        is_chief=is_chief,
-  #        logdir=FLAGS.log_root,
-  #        init_op=model.init_op,
-  #        recovery_wait_secs=1,
-  #        save_model_secs=30, 
-  #        summary_writer=None,
-  #        global_step=model.global_step)
-
-  #  sess_config = tf.ConfigProto(
-  #        allow_soft_placement=True,
-  #        log_device_placement=False,
-  #        device_filters=["/job:ps", "/job:worker/task:%d" % FLAGS.task_index])
-  #  if is_chief:
-  #    print("Worker %d: Initializing session..." % FLAGS.task_index)
-  #  else:
-  #    print("Worker %d: Waiting for session to be initialized..." %
-  #            FLAGS.task_index)
-
-  #  sess = sv.prepare_or_wait_for_session(server.target, config=sess_config)
-  #  print("Worker %d: Session initialization complete." % FLAGS.task_index)
-
-  #  if FLAGS.sync_replicas and is_chief:
-  #      # Chief worker will start the chief queue runner and call the init op.
-  #    sess.run(model.sync_init_op)
-  #    sv.start_queue_runners(sess, [model.chief_queue_runner])
-  #  start_time = time.time();
-  #  while(True):
-  #    # _, cost, step = sess.run([model.train_op, model.cost, model.global_step])
-  #    # print(" step %d : cost %f" % (step, cost))
-  #    (_, cost, predictions, truth, step) = sess.run(
-  #          [model.train_op, model.cost, model.predictions,
-  #           model.labels, model.global_step])
-
-  #    if step % 10 == 0:
-  #      truth = np.argmax(truth, axis=1)
-  #      predictions = np.argmax(predictions, axis=1)
-  #      correct_prediction = np.sum(truth == predictions)
-  #      total_prediction = predictions.shape[0]
-  #      print(" step %d : cost %f, train precision %f" % (step, 1.0 * cost, correct_prediction/total_prediction))
-  #    else:
-  #      end_time = time.time();
-  #      print(" time %f, step %d : cost %f" % (end_time - start_time, step, cost))
-
-  #    if step >= FLAGS.train_steps:
-  #      break
-  #  end_time = time.time()
-  #  print(" time %f s", end_time-start_time)
-  #  sess.close()
 
 def evaluate(hps):
   """Eval loop."""
@@ -277,23 +210,23 @@ def evaluate(hps):
 
 
 def main(_):
-  if FLAGS.mode == 'train':
-    batch_size = 128
-  elif FLAGS.mode == 'eval':
-    batch_size = 100
+  # if FLAGS.mode == 'train':
+  #   batch_size = 128
+  # elif FLAGS.mode == 'eval':
+  #   batch_size = 100
 
   if FLAGS.dataset == 'cifar10':
     num_classes = 10
   elif FLAGS.dataset == 'cifar100':
     num_classes = 100
 
-  hps = resnet_model.HParams(batch_size=batch_size,
+  hps = resnet_model.HParams(batch_size=FLAGS.batch_size,
                              num_classes=num_classes,
                              min_lrn_rate=0.0001,
                              lrn_rate=0.1,
                              num_residual_units=5,
                              use_bottleneck=False,
-                             weight_decay_rate=0.0002,
+                             weight_decay_rate=0.002,
                              relu_leakiness=0.1,
                              optimizer='mom')
 

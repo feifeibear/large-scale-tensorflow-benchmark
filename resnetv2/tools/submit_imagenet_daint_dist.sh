@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=imagenet
-#SBATCH --time=02:30:00
+#SBATCH --time=2:10:00
 #SBATCH --nodes=9
 #SBATCH --constraint=gpu
 #SBATCH --output=slurm_imagenet.%j.log
@@ -43,7 +43,7 @@ export TF_FLAGS="
 export TF_EVAL_FLAGS="
   --eval_data_path=${SCRATCH}/data/imagenet \
   --log_root=./tmp/resnet_model \
-  --train_dir=./tmp/resnet_model/test \
+  --eval_dir=./tmp/resnet_model/test \
   --dataset=${DATASET} \
   --mode=eval \
   --num_gpus=1 \

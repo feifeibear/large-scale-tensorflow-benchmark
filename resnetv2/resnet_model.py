@@ -68,7 +68,7 @@ class ResNet(object):
   def _build_model(self):
     """Build the core model within the graph."""
     if FLAGS.dataset == 'cifar10':
-      network = resnet_model_official.cifar10_resnet_v2_generator(resnet_size= 50, num_classes = 10, data_format=None)
+      network = resnet_model_official.cifar10_resnet_v2_generator(resnet_size= 32, num_classes = 10, data_format=None)
     elif FLAGS.dataset == 'imagenet':
       network = resnet_model_official.imagenet_resnet_v2(resnet_size = 50, num_classes = 1001, data_format=None)
 

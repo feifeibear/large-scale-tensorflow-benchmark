@@ -260,19 +260,10 @@ def train(hps, server):
       mon_sess.run(model.train_op)
 
 def main(_):
-  if FLAGS.mode == 'train':
-    batch_size = 128
-  elif FLAGS.mode == 'eval':
-    batch_size = 100
-
-  if FLAGS.dataset == 'cifar10':
-    num_classes = 10
-  elif FLAGS.dataset == 'cifar100':
-    num_classes = 100
-  elif FLAGS.dataset == 'imagenet':
+  if FLAGS.dataset == 'imagenet':
     num_classes = 1001
 
-  hps = resnet_model.HParams(batch_size=batch_size,
+  hps = resnet_model.HParams(FLAGS.batch_size=batch_size,
                              num_classes=num_classes,
                              min_lrn_rate=0.0001,
                              lrn_rate=0.1,
