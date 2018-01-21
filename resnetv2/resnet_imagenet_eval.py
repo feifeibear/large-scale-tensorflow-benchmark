@@ -49,6 +49,8 @@ tf.app.flags.DEFINE_integer('num_gpus', 0,
                             'Number of gpus used for training. (0 or 1)')
 tf.app.flags.DEFINE_integer("num_epochs", 3000,
                      "Number of (global) training steps to perform")
+tf.app.flags.DEFINE_integer("batch_size", 128,
+                     "batch size for training")
 
 _DEFAULT_IMAGE_SIZE = 224
 _NUM_CHANNELS = 3
@@ -151,9 +153,9 @@ def input_fn(is_training, data_dir, batch_size, num_epochs=1):
 
 def evaluate(hps):
   """Eval loop."""
-  images, labels = input_fn(False, FLAGS.eval_data_path, hps.batch_size, FLAGS.num_epochs)
+  images, labels = input_fn(False, FLAGS.eval_data_path, FLAGS.batch_size, FLAGS.num_epochs)
   #images, labels = cifar_input.build_input(
-  #    FLAGS.dataset, FLAGS.eval_data_path, hps.batch_size, FLAGS.mode)
+  #    FLAGS.dataset, FLAGS.eval_data_path, FLAGS.batch_size, FLAGS.mode)
   model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
   model.build_graph()
   saver = tf.train.Saver()
@@ -215,12 +217,6 @@ def main(_):
     dev = '/gpu:0'
   else:
     raise ValueError('Only support 0 or 1 gpu.')
-
-  if FLAGS.mode == 'train':
-    batch_size = 128
-  elif FLAGS.mode == 'eval':
-    batch_size = 100
-
  
   num_classes = 0 
   if FLAGS.dataset == 'cifar10':
@@ -230,14 +226,10 @@ def main(_):
   elif FLAGS.dataset == 'imagenet':
     num_classes = 1001
 
-  hps = resnet_model.HParams(batch_size=batch_size,
+  hps = resnet_model.HParams(
                              num_classes=num_classes,
-                             min_lrn_rate=0.0001,
                              lrn_rate=0.1,
-                             num_residual_units=5,
-                             use_bottleneck=False,
                              weight_decay_rate=0.0002,
-                             relu_leakiness=0.1,
                              optimizer='mom')
 
   with tf.device(dev):
