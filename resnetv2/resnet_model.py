@@ -33,9 +33,9 @@ FLAGS = tf.app.flags.FLAGS
 
 
 HParams = namedtuple('HParams',
-                     'batch_size, num_classes, min_lrn_rate, lrn_rate, '
-                     'num_residual_units, use_bottleneck, weight_decay_rate, '
-                     'relu_leakiness, optimizer')
+                     'num_classes, lrn_rate, '
+                     'weight_decay_rate, '
+                     'optimizer')
 
 
 class ResNet(object):
@@ -68,9 +68,9 @@ class ResNet(object):
   def _build_model(self):
     """Build the core model within the graph."""
     if FLAGS.dataset == 'cifar10':
-      network = resnet_model_official.cifar10_resnet_v2_generator(resnet_size= 32, num_classes = 10, data_format=None)
+      network = resnet_model_official.cifar10_resnet_v2_generator(resnet_size= 32, num_classes = self.hps.num_classes, data_format=None)
     elif FLAGS.dataset == 'imagenet':
-      network = resnet_model_official.imagenet_resnet_v2(resnet_size = 50, num_classes = 1001, data_format=None)
+      network = resnet_model_official.imagenet_resnet_v2(resnet_size = 50, num_classes = self.hps.num_classes, data_format=None)
 
     logits = network(self._images, True)
     self.predictions = tf.nn.softmax(logits)

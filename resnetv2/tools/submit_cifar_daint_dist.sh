@@ -23,8 +23,8 @@ source $WORKON_HOME/tf-daint/bin/activate
 # set TensorFlow script parameters
 # export TF_SCRIPT="$HOME/mymnist/dist_deepMNIST_gpu.py"
 export WORK_DIR=`pwd`/..
-export TF_SCRIPT="${WORK_DIR}/resnet_main.py"
-export TF_EVAL_SCRIPT="${WORK_DIR}/resnet_eval.py"
+export TF_SCRIPT="${WORK_DIR}/resnet_cifar_main.py"
+export TF_EVAL_SCRIPT="${WORK_DIR}/resnet_cifar_eval.py"
 export DATASET=cifar10
 
 export TF_FLAGS="

@@ -25,7 +25,7 @@ import cifar_input
 import numpy as np
 import resnet_model
 import logist_model
-import vgg_preprocessing 
+import vgg_preprocessing
 import tensorflow as tf
 
 FLAGS = tf.app.flags.FLAGS
@@ -263,14 +263,9 @@ def main(_):
   if FLAGS.dataset == 'imagenet':
     num_classes = 1001
 
-  hps = resnet_model.HParams(FLAGS.batch_size=batch_size,
-                             num_classes=num_classes,
-                             min_lrn_rate=0.0001,
+  hps = resnet_model.HParams(num_classes=num_classes,
                              lrn_rate=0.1,
-                             num_residual_units=5,
-                             use_bottleneck=False,
                              weight_decay_rate=0.0001,
-                             relu_leakiness=0.1,
                              optimizer='mom')
 
   # add cluster information
@@ -319,14 +314,6 @@ def main(_):
 
     if FLAGS.mode == 'train':
       train(hps, server)
-
-
-#  with tf.device(dev):
-#    if FLAGS.mode == 'train':
-#      train(hps)
-#    elif FLAGS.mode == 'eval':
-#      evaluate(hps)
-
 
 if __name__ == '__main__':
   tf.logging.set_verbosity(tf.logging.INFO)
