@@ -1,6 +1,6 @@
-<font size=4><b>Reproduced ResNet on CIFAR-10 and CIFAR-100 dataset.</b></font>
+<font size=4><b>Distributed ResNet on Cifar and Imagenet Dataset.</b></font>
 
-contact: panyx0718 (xpan@google.com)
+contact: Jiarui Fang (fjr14@mails.tsinghua.edu.cn)
 
 <b>Dataset:</b>
 
@@ -20,7 +20,7 @@ Wide Residual Networks
 
 https://arxiv.org/pdf/1605.07146v1.pdf
 
-<b>Settings:</b>
+<b>Cifar-10 Settings:</b>
 
 * Random split 50k training set into 45k/5k train/eval split.
 * Pad to 36x36 and random crop. Horizontal flip. Per-image whitening.
@@ -76,29 +76,11 @@ cifar10  resnet  WORKSPACE
 data_batch_1.bin  data_batch_2.bin  data_batch_3.bin  data_batch_4.bin
 data_batch_5.bin  test_batch.bin
 
-./resnet:
-BUILD  cifar_input.py  g3doc  README.md  resnet_main.py  resnet_model.py
-
-# Build everything for GPU.
-$ bazel build -c opt --config=cuda resnet/...
-
-# Train the model.
-$ bazel-bin/resnet/resnet_main --train_data_path=cifar10/data_batch* \
-                               --log_root=/tmp/resnet_model \
-                               --train_dir=/tmp/resnet_model/train \
-                               --dataset='cifar10' \
-                               --num_gpus=1
-
-# While the model is training, you can also check on its progress using tensorboard:
-$ tensorboard --logdir=/tmp/resnet_model
-
-# Evaluate the model.
-# Avoid running on the same GPU as the training job at the same time,
-# otherwise, you might run out of memory.
-$ bazel-bin/resnet/resnet_main --eval_data_path=cifar10/test_batch.bin \
-                               --log_root=/tmp/resnet_model \
-                               --eval_dir=/tmp/resnet_model/test \
-                               --mode=eval \
-                               --dataset='cifar10' \
-                               --num_gpus=0
+$ cd tools
+# run local for cifar10
+$ sh submit_local_dist.sh
+# run on Piz Daint for cifar
+$ sh submit_cifar_daint_dist.sh
+# run on Piz Daint for Imagenet
+$ sh submit_imagenet_daint_dist.sh
 ```
