@@ -91,8 +91,6 @@ class ResNet(object):
     self.lrn_rate = tf.constant(self.hps.lrn_rate, tf.float32)
     tf.summary.scalar('learning_rate', self.lrn_rate)
 
-    trainable_variables = tf.trainable_variables()
-    grads = tf.gradients(self.cost, trainable_variables)
 
     if self.hps.optimizer == 'sgd':
       optimizer = tf.train.GradientDescentOptimizer(self.lrn_rate)
@@ -112,11 +110,18 @@ class ResNet(object):
           total_num_replicas=FLAGS.replicas_to_aggregate,
           name="resnet_sync_replicas")
 
-    apply_op = optimizer.apply_gradients(
-        zip(grads, trainable_variables),
-        global_step=self.global_step, name='train_step')
-    train_ops = [apply_op] + self._extra_train_ops
-    self.train_op = tf.group(*train_ops)
+    # Batch norm requires update_ops to be added as a train_op dependency.
+    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+    with tf.control_dependencies(update_ops):
+      self.train_op = optimizer.minimize(self.cost, self.global_step)
+
+    # trainable_variables = tf.trainable_variables()
+    # grads = tf.gradients(self.cost, trainable_variables)
+    # apply_op = optimizer.apply_gradients(
+    #     zip(grads, trainable_variables),
+    #     global_step=self.global_step, name='train_step')
+    # train_ops = [apply_op] + self._extra_train_ops
+    # self.train_op = tf.group(*train_ops)
 
 # dist sync init
 

@@ -83,7 +83,6 @@ FLAGS = flags.FLAGS
 def train(hps, server):
   """Training loop."""
   # Ops : on every worker   
-  print("debug ", FLAGS.train_data_path)
   images, labels = cifar_input.build_input(
       FLAGS.dataset, FLAGS.train_data_path, FLAGS.batch_size, FLAGS.mode)
   model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
@@ -100,10 +99,6 @@ def train(hps, server):
   #    tf.get_default_graph(),
   #    tfprof_options=tf.contrib.tfprof.model_analyzer.FLOAT_OPS_OPTIONS)
 
-  truth = tf.argmax(model.labels, axis=1)
-  predictions = tf.argmax(model.predictions, axis=1)
-  precision = tf.reduce_mean(tf.to_float(tf.equal(predictions, truth)))
-
   summary_hook = tf.train.SummarySaverHook(
       save_steps=100,
       output_dir=FLAGS.train_dir,
@@ -113,7 +108,7 @@ def train(hps, server):
   logging_hook = tf.train.LoggingTensorHook(
       tensors={'step': model.global_step,
                'loss': model.cost,
-               'precision': precision},
+               'precision': self.precision},
       every_n_iter=1)
 
   class _LearningRateSetterHook(tf.train.SessionRunHook):
