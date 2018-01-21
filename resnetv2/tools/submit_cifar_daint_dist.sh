@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=dist_deepMNIST
 #SBATCH --time=3:30:00
-#SBATCH --nodes=9
+#SBATCH --nodes=2
 #SBATCH --constraint=gpu
 #SBATCH --output=dist_cifar.%j.log
 
@@ -33,7 +33,7 @@ export TF_FLAGS="
   --train_dir=./tmp/resnet_model/train \
   --dataset=${DATASET} \
   --num_gpus=1 \
-  --batch_size=16 \
+  --batch_size=128 \
   --sync_replicas=True \
   --train_steps=80000
 "
