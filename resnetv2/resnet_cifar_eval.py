@@ -190,14 +190,9 @@ def main(_):
   elif FLAGS.dataset == 'cifar100':
     num_classes = 100
 
-  hps = resnet_model.HParams(batch_size=batch_size,
-                             num_classes=num_classes,
-                             min_lrn_rate=0.0001,
+  hps = resnet_model.HParams(num_classes=num_classes,
                              lrn_rate=0.1,
-                             num_residual_units=5,
-                             use_bottleneck=False,
                              weight_decay_rate=0.0002,
-                             relu_leakiness=0.1,
                              optimizer='mom')
 
   with tf.device(dev):
