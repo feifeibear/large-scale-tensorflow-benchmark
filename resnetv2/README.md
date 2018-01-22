@@ -77,10 +77,10 @@ data_batch_1.bin  data_batch_2.bin  data_batch_3.bin  data_batch_4.bin
 data_batch_5.bin  test_batch.bin
 
 $ cd tools
-# run local for cifar10
+# run local for cifar10. It will launch 1 ps and 2 workers 
 $ sh submit_local_dist.sh
 # run on Piz Daint for cifar
-$ sh submit_cifar_daint_dist.sh
+$ sh submit_cifar_daint_dist.sh #server #worker
 # run on Piz Daint for Imagenet
-$ sh submit_imagenet_daint_dist.sh
+$ sh submit_imagenet_daint_dist.sh #server #worker
 ```

@@ -99,6 +99,10 @@ def train(hps, server):
   #    tf.get_default_graph(),
   #    tfprof_options=tf.contrib.tfprof.model_analyzer.FLOAT_OPS_OPTIONS)
 
+  truth = tf.argmax(model.labels, axis=1)
+  predictions = tf.argmax(model.predictions, axis=1)
+  precision = tf.reduce_mean(tf.to_float(tf.equal(predictions, truth)))
+
   summary_hook = tf.train.SummarySaverHook(
       save_steps=100,
       output_dir=FLAGS.train_dir,
@@ -108,7 +112,8 @@ def train(hps, server):
   logging_hook = tf.train.LoggingTensorHook(
       tensors={'step': model.global_step,
                'loss': model.cost,
-               'precision': self.precision},
+               'precision': precision,
+                'lr':  model.lrn_rate},
       every_n_iter=1)
 
   class _LearningRateSetterHook(tf.train.SessionRunHook):
@@ -212,7 +217,7 @@ def main(_):
 
   hps = resnet_model.HParams(num_classes=num_classes,
                              lrn_rate=0.1,
-                             weight_decay_rate=0.002,
+                             weight_decay_rate=2e-4,
                              optimizer='mom')
 
   # add cluster information

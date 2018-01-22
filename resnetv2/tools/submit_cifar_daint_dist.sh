@@ -33,7 +33,7 @@ export TF_FLAGS="
   --train_dir=./tmp/resnet_model/train \
   --dataset=${DATASET} \
   --num_gpus=1 \
-  --batch_size=32 \
+  --batch_size=128 \
   --sync_replicas=True \
   --train_steps=80000
 "
