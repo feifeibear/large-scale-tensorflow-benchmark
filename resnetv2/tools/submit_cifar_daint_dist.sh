@@ -28,7 +28,7 @@ export TF_EVAL_SCRIPT="${WORK_DIR}/resnet_cifar_eval.py"
 export DATASET=cifar10
 
 export TF_FLAGS="
-  --train_data_path=${SCRATCH}/data/cifar-10-batches-bin/data_batch* \
+  --train_data_path=${SCRATCH}/data \
   --log_root=./tmp/resnet_model \
   --train_dir=./tmp/resnet_model/train \
   --dataset=${DATASET} \

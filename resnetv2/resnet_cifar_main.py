@@ -210,7 +210,7 @@ def train(hps, server):
   # old dataset   
   # images, labels = cifar_input.build_input(
   #    FLAGS.dataset, FLAGS.train_data_path, FLAGS.batch_size, FLAGS.mode)
-  images, labels = input_fn(True, FLAGS.train_data_path, FLAGS.batch_size, num_epochs=100)
+  images, labels = input_fn(True, FLAGS.train_data_path, FLAGS.batch_size, num_epochs=1000)
   model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
   # model = logist_model.LRNet(images, labels, FLAGS.mode)
   model.build_graph()
