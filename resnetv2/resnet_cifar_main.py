@@ -151,64 +151,6 @@ def train(hps, server):
     while not mon_sess.should_stop():
       mon_sess.run(model.train_op)
 
-def evaluate(hps):
-  """Eval loop."""
-  images, labels = cifar_input.build_input(
-      FLAGS.dataset, FLAGS.eval_data_path, hps.batch_size, FLAGS.mode)
-  model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
-  model.build_graph()
-  saver = tf.train.Saver()
-  summary_writer = tf.summary.FileWriter(FLAGS.eval_dir)
-
-  sess = tf.Session(config=tf.ConfigProto(allow_soft_placement=True))
-  tf.train.start_queue_runners(sess)
-
-  best_precision = 0.0
-  while True:
-    try:
-      ckpt_state = tf.train.get_checkpoint_state(FLAGS.log_root)
-    except tf.errors.OutOfRangeError as e:
-      tf.logging.error('Cannot restore checkpoint: %s', e)
-      continue
-    if not (ckpt_state and ckpt_state.model_checkpoint_path):
-      tf.logging.info('No model to eval yet at %s', FLAGS.log_root)
-      continue
-    tf.logging.info('Loading checkpoint %s', ckpt_state.model_checkpoint_path)
-    saver.restore(sess, ckpt_state.model_checkpoint_path)
-
-    total_prediction, correct_prediction = 0, 0
-    for _ in six.moves.range(FLAGS.eval_batch_count):
-      (summaries, loss, predictions, truth, train_step) = sess.run(
-          [model.summaries, model.cost, model.predictions,
-           model.labels, model.global_step])
-
-      truth = np.argmax(truth, axis=1)
-      predictions = np.argmax(predictions, axis=1)
-      correct_prediction += np.sum(truth == predictions)
-      total_prediction += predictions.shape[0]
-
-    precision = 1.0 * correct_prediction / total_prediction
-    best_precision = max(precision, best_precision)
-
-    precision_summ = tf.Summary()
-    precision_summ.value.add(
-        tag='Precision', simple_value=precision)
-    summary_writer.add_summary(precision_summ, train_step)
-    best_precision_summ = tf.Summary()
-    best_precision_summ.value.add(
-        tag='Best Precision', simple_value=best_precision)
-    summary_writer.add_summary(best_precision_summ, train_step)
-    summary_writer.add_summary(summaries, train_step)
-    tf.logging.info('loss: %.3f, precision: %.3f, best precision: %.3f' %
-                    (loss, precision, best_precision))
-    summary_writer.flush()
-
-    if FLAGS.eval_once:
-      break
-
-    time.sleep(60)
-
-
 def main(_):
   if FLAGS.dataset == 'cifar10':
     num_classes = 10
@@ -266,14 +208,6 @@ def main(_):
 
     if FLAGS.mode == 'train':
       train(hps, server)
-
-
-#  with tf.device(dev):
-#    if FLAGS.mode == 'train':
-#      train(hps)
-#    elif FLAGS.mode == 'eval':
-#      evaluate(hps)
-
 
 if __name__ == '__main__':
   tf.logging.set_verbosity(tf.logging.INFO)
