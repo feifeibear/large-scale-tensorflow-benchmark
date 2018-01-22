@@ -11,7 +11,7 @@ TF_DIST_FLAGS=" --ps_hosts=$3 --worker_hosts=$4"
 
 TF_SCRIPT=../resnet_cifar_main.py
 
-TF_FLAGS="--train_data_path=../cifar-10-batches-bin/data_batch* \
+TF_FLAGS="--train_data_path=.. \
   --log_root=./tmp/resnet_model \
   --train_dir=./tmp/resnet_model/train \
   --dataset=cifar10 \
