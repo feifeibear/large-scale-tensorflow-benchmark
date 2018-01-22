@@ -205,7 +205,7 @@ def input_fn(is_training, data_dir, batch_size, num_epochs=1):
 
 
 
-def train(hps, server):
+def train(hps, server = None):
   """Training loop."""
   # old dataset   
   # images, labels = cifar_input.build_input(
@@ -262,20 +262,34 @@ def train(hps, server):
       else:
         self._lrn_rate = 0.001
 
-  is_chief = (FLAGS.task_index == 0)
-#comments old single Version
-  with tf.train.MonitoredTrainingSession(
-      master=server.target,
-      is_chief=is_chief,
-      checkpoint_dir=FLAGS.log_root,
-      hooks=[logging_hook, _LearningRateSetterHook()],
-      chief_only_hooks=[model.replicas_hook, summary_hook],
-      # Since we provide a SummarySaverHook, we need to disable default
-      # SummarySaverHook. To do that we set save_summaries_steps to 0.
-      save_summaries_steps=0,
-      config=tf.ConfigProto(allow_soft_placement=True)) as mon_sess:
-    while not mon_sess.should_stop():
-      mon_sess.run(model.train_op)
+  if FLAGS.job_name == None: 
+    #serial version
+    with tf.train.MonitoredTrainingSession(
+        checkpoint_dir=FLAGS.log_root,
+        hooks=[logging_hook, _LearningRateSetterHook()],
+        chief_only_hooks=[summary_hook],
+        # Since we provide a SummarySaverHook, we need to disable default
+        # SummarySaverHook. To do that we set save_summaries_steps to 0.
+        save_summaries_steps=0,
+        config=tf.ConfigProto(allow_soft_placement=True)) as mon_sess:
+      while not mon_sess.should_stop():
+        mon_sess.run(model.train_op)
+
+  else:
+    is_chief = (FLAGS.task_index == 0)
+#c  omments old single Version
+    with tf.train.MonitoredTrainingSession(
+        master=server.target,
+        is_chief=is_chief,
+        checkpoint_dir=FLAGS.log_root,
+        hooks=[logging_hook, _LearningRateSetterHook()],
+        chief_only_hooks=[model.replicas_hook, summary_hook],
+        # Since we provide a SummarySaverHook, we need to disable default
+        # SummarySaverHook. To do that we set save_summaries_steps to 0.
+        save_summaries_steps=0,
+        config=tf.ConfigProto(allow_soft_placement=True)) as mon_sess:
+      while not mon_sess.should_stop():
+        mon_sess.run(model.train_op)
 
 def main(_):
   if FLAGS.dataset == 'cifar10':
@@ -288,52 +302,56 @@ def main(_):
                              weight_decay_rate=_WEIGHT_DECAY,
                              optimizer='mom')
 
-  # add cluster information
-  if FLAGS.job_name is None or FLAGS.job_name == "":
-    raise ValueError("Must specify an explicit `job_name`")
-  if FLAGS.task_index is None or FLAGS.task_index =="":
-    raise ValueError("Must specify an explicit `task_index`")
+  if FLAGS.job_name == None:
+    # serial version
+    train(hps)
+  else:
+    # add cluster information
+    if FLAGS.job_name is "" or FLAGS.job_name == "":
+      raise ValueError("Must specify an explicit `job_name`")
+    if FLAGS.task_index is "" or FLAGS.task_index =="":
+      raise ValueError("Must specify an explicit `task_index`")
 
-  print("job name = %s" % FLAGS.job_name)
-  print("task index = %d" % FLAGS.task_index)
+    print("job name = %s" % FLAGS.job_name)
+    print("task index = %d" % FLAGS.task_index)
 
-  #Construct the cluster and start the server
-  ps_spec = FLAGS.ps_hosts.split(",")
-  worker_spec = FLAGS.worker_hosts.split(",")
+    #Construct the cluster and start the server
+    ps_spec = FLAGS.ps_hosts.split(",")
+    worker_spec = FLAGS.worker_hosts.split(",")
 
-  # Get the number of workers.
-  num_workers = len(worker_spec)
-  FLAGS.replicas_to_aggregate = num_workers
+    # Get the number of workers.
+    num_workers = len(worker_spec)
+    FLAGS.replicas_to_aggregate = num_workers
 
-  cluster = tf.train.ClusterSpec({
-      "ps": ps_spec,
-      "worker": worker_spec})
+    cluster = tf.train.ClusterSpec({
+        "ps": ps_spec,
+        "worker": worker_spec})
 
-  if not FLAGS.existing_servers:
-    # Not using existing servers. Create an in-process server.
-    server = tf.train.Server(
-        cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
-    if FLAGS.job_name == "ps":
-      server.join()
+    if not FLAGS.existing_servers:
+      # Not using existing servers. Create an in-process server.
+      server = tf.train.Server(
+          cluster, job_name=FLAGS.job_name, task_index=FLAGS.task_index)
+      if FLAGS.job_name == "ps":
+        server.join()
 
-  if FLAGS.num_gpus > 0:
-    # Avoid gpu allocation conflict: now allocate task_num -> #gpu
-    # for each worker in the corresponding machine
-    gpu = (FLAGS.task_index % FLAGS.num_gpus)
-    worker_device = "/job:worker/task:%d/gpu:%d" % (FLAGS.task_index, gpu)
-  elif FLAGS.num_gpus == 0:
-    # Just allocate the CPU to worker server
-    cpu = 0
-    worker_device = "/job:worker/task:%d/cpu:%d" % (FLAGS.task_index, cpu)
+    if FLAGS.num_gpus > 0:
+      # Avoid gpu allocation conflict: now allocate task_num -> #gpu
+      # for each worker in the corresponding machine
+      gpu = (FLAGS.task_index % FLAGS.num_gpus)
+      worker_device = "/job:worker/task:%d/gpu:%d" % (FLAGS.task_index, gpu)
+    elif FLAGS.num_gpus == 0:
+      # Just allocate the CPU to worker server
+      cpu = 0
+      worker_device = "/job:worker/task:%d/cpu:%d" % (FLAGS.task_index, cpu)
 
-  with tf.device(
-      tf.train.replica_device_setter(
-          worker_device=worker_device,
-          # ps_device="/job:ps/cpu:0",
-          cluster=cluster)):
+    with tf.device(
+        tf.train.replica_device_setter(
+            worker_device=worker_device,
+            # ps_device="/job:ps/cpu:0",
+            cluster=cluster)):
 
-    if FLAGS.mode == 'train':
-      train(hps, server)
+      if FLAGS.mode == 'train':
+        train(hps, server)
 
 if __name__ == '__main__':
   tf.logging.set_verbosity(tf.logging.INFO)

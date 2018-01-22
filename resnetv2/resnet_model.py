@@ -98,7 +98,7 @@ class ResNet(object):
       optimizer = tf.train.MomentumOptimizer(self.lrn_rate, 0.9)
 
     #dist: add sync 
-    if FLAGS.sync_replicas:
+    if FLAGS.job_name != None and FLAGS.sync_replicas:
       if FLAGS.replicas_to_aggregate is None:
         raise ValueError("Must specify an explicit `replicas_to_aggregate`")
       else:
@@ -125,9 +125,8 @@ class ResNet(object):
 
 # dist sync init
 
-    if FLAGS.sync_replicas:
+    if FLAGS.job_name != None and FLAGS.sync_replicas:
       is_chief = (FLAGS.task_index == 0)
-      self.replicas_hook = optimizer.make_session_run_hook(is_chief)
       self.local_init_op = optimizer.local_step_init_op
       if is_chief:
         self.local_init_op = optimizer.chief_init_op
