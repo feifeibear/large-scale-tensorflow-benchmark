@@ -34,8 +34,8 @@ global batch size = 128
 
 CIFAR-10 Model|Best Precision|PS-WK |Steps|Speed (stp/sec)
 --------------|--------------|------|-----|--------------
-50 layer|92.1%|local|~80k|13.94
-50 layer|86.9%|1ps-1wk|~80k|10.19
+50 layer|92.5%|local|~80k|13.94
+50 layer|88.5%|1ps-1wk|~80k|10.19
 50 layer|88.5%|8ps-8wk|~80k|19.19
 
 
