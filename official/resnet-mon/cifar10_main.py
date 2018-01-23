@@ -217,6 +217,10 @@ def cifar10_model_fn(features, labels, mode, params):
     batches_per_epoch = _NUM_IMAGES['train'] / params['batch_size']
     global_step = tf.train.get_or_create_global_step()
 
+    # Create a tensor named globale_step for logging purposes
+    tf.identity(global_step, name='global_step')
+    tf.summary.scalar('global_step', global_step)
+
     # Multiply the learning rate by 0.1 at 100, 150, and 200 epochs.
     boundaries = [int(batches_per_epoch * epoch) for epoch in [100, 150, 200]]
     values = [initial_learning_rate * decay for decay in [1, 0.1, 0.01, 0.001]]
@@ -274,99 +278,100 @@ def main(unused_argv):
       'batch_size': FLAGS.batch_size 
       }
 
-  for _ in range(FLAGS.train_epochs // FLAGS.epochs_per_eval):
-    tensors_to_log = {
-        'learning_rate': 'learning_rate',
-        'cross_entropy': 'cross_entropy',
-        'train_accuracy': 'train_accuracy'
-    }
+  tensors_to_log = {
+      'learning_rate': 'learning_rate',
+      'cross_entropy': 'cross_entropy',
+      'train_accuracy': 'train_accuracy',
+      'global_step':'global_step' 
+  }
 
-    logging_hook = tf.train.LoggingTensorHook(
-        tensors=tensors_to_log, every_n_iter=100)
+  logging_hook = tf.train.LoggingTensorHook(
+      tensors=tensors_to_log, every_n_iter=100)
 
-    # change to my code
-    # cifar_classifier.train(
-    #     input_fn=lambda: input_fn(
-    #         True, FLAGS.data_dir, FLAGS.batch_size, FLAGS.epochs_per_eval),
-    #     hooks=[logging_hook])
+  # change to my code
+  # cifar_classifier.train(
+  #     input_fn=lambda: input_fn(
+  #         True, FLAGS.data_dir, FLAGS.batch_size, FLAGS.epochs_per_eval),
+  #     hooks=[logging_hook])
 
-    #your code TODO num_epochs
-    features, labels = input_fn(True, FLAGS.data_dir, FLAGS.batch_size, num_epochs=FLAGS.epochs_per_eval)
+  #your code TODO num_epochs
+  features, labels = input_fn(True, FLAGS.data_dir, FLAGS.batch_size, num_epochs=FLAGS.train_epochs)
 
-    """Model function for CIFAR-10."""
-    tf.summary.image('images', features, max_outputs=6)
+  """Model function for CIFAR-10."""
+  tf.summary.image('images', features, max_outputs=6)
 
-    network = resnet_model.cifar10_resnet_v2_generator(
-      params['resnet_size'], _NUM_CLASSES, params['data_format'])
+  network = resnet_model.cifar10_resnet_v2_generator(
+    params['resnet_size'], _NUM_CLASSES, params['data_format'])
 
-    inputs = tf.reshape(features, [-1, _HEIGHT, _WIDTH, _DEPTH])
-    logits = network(inputs, True)
+  inputs = tf.reshape(features, [-1, _HEIGHT, _WIDTH, _DEPTH])
+  logits = network(inputs, True)
 
-    predictions = {
-      'classes': tf.argmax(logits, axis=1),
-      'probabilities': tf.nn.softmax(logits, name='softmax_tensor')
-    }
+  predictions = {
+    'classes': tf.argmax(logits, axis=1),
+    'probabilities': tf.nn.softmax(logits, name='softmax_tensor')
+  }
 
-    # Calculate loss, which includes softmax cross entropy and L2 regularization.
-    cross_entropy = tf.losses.softmax_cross_entropy(
-      logits=logits, onehot_labels=labels)
+  # Calculate loss, which includes softmax cross entropy and L2 regularization.
+  cross_entropy = tf.losses.softmax_cross_entropy(
+    logits=logits, onehot_labels=labels)
 
-    # Create a tensor named cross_entropy for logging purposes.
-    tf.identity(cross_entropy, name='cross_entropy')
-    tf.summary.scalar('cross_entropy', cross_entropy)
+  # Create a tensor named cross_entropy for logging purposes.
+  tf.identity(cross_entropy, name='cross_entropy')
+  tf.summary.scalar('cross_entropy', cross_entropy)
 
-    # Add weight decay to the loss.
-    loss = cross_entropy + _WEIGHT_DECAY * tf.add_n(
-      [tf.nn.l2_loss(v) for v in tf.trainable_variables()])
+  # Add weight decay to the loss.
+  loss = cross_entropy + _WEIGHT_DECAY * tf.add_n(
+    [tf.nn.l2_loss(v) for v in tf.trainable_variables()])
 
-    if True:
-    # Scale the learning rate linearly with the batch size. When the batch size
-    # is 128, the learning rate should be 0.1.
-        initial_learning_rate = 0.1 * params['batch_size'] / 128
-        batches_per_epoch = _NUM_IMAGES['train'] / params['batch_size']
-        global_step = tf.train.get_or_create_global_step()
+  if True:
+  # Scale the learning rate linearly with the batch size. When the batch size
+  # is 128, the learning rate should be 0.1.
+      initial_learning_rate = 0.1 * params['batch_size'] / 128
+      batches_per_epoch = _NUM_IMAGES['train'] / params['batch_size']
+      global_step = tf.train.get_or_create_global_step()
 
-    # Multiply the learning rate by 0.1 at 100, 150, and 200 epochs.
-        boundaries = [int(batches_per_epoch * epoch) for epoch in [100, 150, 200]]
-        values = [initial_learning_rate * decay for decay in [1, 0.1, 0.01, 0.001]]
-        learning_rate = tf.train.piecewise_constant(
-            tf.cast(global_step, tf.int32), boundaries, values)
+  # Multiply the learning rate by 0.1 at 100, 150, and 200 epochs.
+      boundaries = [int(batches_per_epoch * epoch) for epoch in [100, 150, 200]]
+      values = [initial_learning_rate * decay for decay in [1, 0.1, 0.01, 0.001]]
+      learning_rate = tf.train.piecewise_constant(
+          tf.cast(global_step, tf.int32), boundaries, values)
 
-    # Create a tensor named learning_rate for logging purposes
-    tf.identity(learning_rate, name='learning_rate')
-    tf.summary.scalar('learning_rate', learning_rate)
+  # Create a tensor named learning_rate for logging purposes
+  tf.identity(learning_rate, name='learning_rate')
+  tf.summary.scalar('learning_rate', learning_rate)
 
-    optimizer = tf.train.MomentumOptimizer(
-        learning_rate=learning_rate,
-        momentum=_MOMENTUM)
+  optimizer = tf.train.MomentumOptimizer(
+      learning_rate=learning_rate,
+      momentum=_MOMENTUM)
 
-    # Batch norm requires update ops to be added as a dependency to the train_op
-    update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-    with tf.control_dependencies(update_ops):
-      train_op = optimizer.minimize(loss, global_step)
+  # Batch norm requires update ops to be added as a dependency to the train_op
+  update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
+  with tf.control_dependencies(update_ops):
+    train_op = optimizer.minimize(loss, global_step)
 
-    accuracy = tf.metrics.accuracy(
-      tf.argmax(labels, axis=1), predictions['classes'])
-    metrics = {'accuracy': accuracy}
+  accuracy = tf.metrics.accuracy(
+    tf.argmax(labels, axis=1), predictions['classes'])
+  metrics = {'accuracy': accuracy}
 
-    # Create a tensor named train_accuracy for logging purposes
-    tf.identity(accuracy[1], name='train_accuracy')
-    tf.summary.scalar('train_accuracy', accuracy[1])
+  # Create a tensor named train_accuracy for logging purposes
+  tf.identity(accuracy[1], name='train_accuracy')
+  tf.summary.scalar('train_accuracy', accuracy[1])
+  tf.summary.merge_all()
 
-    with tf.train.MonitoredTrainingSession(
-        checkpoint_dir=FLAGS.model_dir,
-        hooks=[logging_hook],
-        # Since we provide a SummarySaverHook, we need to disable default
-        # SummarySaverHook. To do that we set save_summaries_steps to 0.
-        config=tf.ConfigProto(allow_soft_placement=True)) as mon_sess:
-      while not mon_sess.should_stop():
-        mon_sess.run(train_op)
+  with tf.train.MonitoredTrainingSession(
+      checkpoint_dir=FLAGS.model_dir,
+      hooks=[logging_hook],
+      # Since we provide a SummarySaverHook, we need to disable default
+      # SummarySaverHook. To do that we set save_summaries_steps to 0.
+      config=tf.ConfigProto(allow_soft_placement=True)) as mon_sess:
+    while not mon_sess.should_stop():
+      mon_sess.run(train_op)
 
-    # Evaluate the model and print results
-    # eval_results = cifar_classifier.evaluate(
-    #    input_fn=lambda: input_fn(False, FLAGS.data_dir, FLAGS.batch_size))
-    # print(eval_results)
-    # wait for my eval code
+  # Evaluate the model and print results
+  # eval_results = cifar_classifier.evaluate(
+  #    input_fn=lambda: input_fn(False, FLAGS.data_dir, FLAGS.batch_size))
+  # print(eval_results)
+  # wait for my eval code
 
 
 if __name__ == '__main__':

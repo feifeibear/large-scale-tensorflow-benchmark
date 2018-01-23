@@ -45,7 +45,7 @@ tf.app.flags.DEFINE_string('log_root', '',
                            'parent directory of FLAGS.train_dir/eval_dir.')
 tf.app.flags.DEFINE_integer('num_gpus', 0,
                             'Number of gpus used for training. (0 or 1)')
-tf.app.flags.DEFINE_integer('batch_size', 0,
+tf.app.flags.DEFINE_integer('batch_size',100, 
                             'Number of gpus used for training. (0 or 1)')
 
 _HEIGHT = 32
@@ -261,7 +261,7 @@ def evaluate():
 
   params={
       'resnet_size': 32,
-      'data_format': 'channels_first',
+      'data_format': 'channels_last',
       'batch_size': 100.
       }
 
@@ -317,14 +317,13 @@ def evaluate():
 
     total_prediction, correct_prediction = 0, 0
     for _ in six.moves.range(FLAGS.eval_batch_count):
-      (summaries_val, loss_val, predictions, truth, train_step) = sess.run(
-          [self.summaries, self.loss, self.predictions['classes'],
+      (summaries_val, loss_val, predictions_val, truth, train_step) = sess.run(
+          [summaries, loss, predictions['classes'],
            labels, global_step])
 
       truth = np.argmax(truth, axis=1)
-      predictions = np.argmax(predictions, axis=1)
-      correct_prediction += np.sum(truth == predictions)
-      total_prediction += predictions.shape[0]
+      correct_prediction += np.sum(truth == predictions_val)
+      total_prediction += truth.shape[0]
 
     precision = 1.0 * correct_prediction / total_prediction
     best_precision = max(precision, best_precision)
