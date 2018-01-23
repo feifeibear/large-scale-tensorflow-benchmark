@@ -234,7 +234,10 @@ def train(hps, server):
     def after_run(self, run_context, run_values):
       #intel resnet_50_8_nodes version
       train_step = run_values.results
-      if train_step < 37440:
+
+      if train_step < 6240:
+        self._lrn_rate = 0.1 + 0.3*train_step/6240.0
+      elif train_step < 37440:
         self._lrn_rate = 0.4
       elif train_step < 74880:
         self._lrn_rate = 0.1 * 0.4

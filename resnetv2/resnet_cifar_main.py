@@ -231,7 +231,7 @@ def train(hps, server = None):
 
   summary_hook = tf.train.SummarySaverHook(
       save_steps=100,
-      output_dir=FLAGS.train_dir,
+      output_dir=FLAGS.eval_dir,
       summary_op=tf.summary.merge([model.summaries,
                                    tf.summary.scalar('Precision', precision)]))
 
@@ -240,7 +240,7 @@ def train(hps, server = None):
                'loss': model.cost,
                'precision': precision,
                 'lr':  model.lrn_rate},
-      every_n_iter=1)
+      every_n_iter=20)
 
   class _LearningRateSetterHook(tf.train.SessionRunHook):
     """Sets learning_rate based on global step."""
@@ -266,6 +266,7 @@ def train(hps, server = None):
     #serial version
     with tf.train.MonitoredTrainingSession(
         checkpoint_dir=FLAGS.log_root,
+        save_checkpoint_secs=60,
         hooks=[logging_hook, _LearningRateSetterHook()],
         chief_only_hooks=[summary_hook],
         # Since we provide a SummarySaverHook, we need to disable default
@@ -277,7 +278,6 @@ def train(hps, server = None):
 
   else:
     is_chief = (FLAGS.task_index == 0)
-#c  omments old single Version
     with tf.train.MonitoredTrainingSession(
         master=server.target,
         is_chief=is_chief,

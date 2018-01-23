@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH --job-name=imagenet
-#SBATCH --time=2:10:00
+#SBATCH --time=24:00:00
 #SBATCH --nodes=9
 #SBATCH --constraint=gpu
 #SBATCH --output=slurm_imagenet.%j.log

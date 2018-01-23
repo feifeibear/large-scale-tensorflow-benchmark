@@ -30,6 +30,14 @@ https://arxiv.org/pdf/1605.07146v1.pdf
 * Batch size: 128. (28-10 wide and 1001 layer bottleneck use 64)
 
 <b>Results:</b>
+global batch size = 128
+CIFAR-10 Model|Best Precision|PS-WK |Steps|Speed (stp/sec)|
+--------------|--------------|------|-----|--------------|
+50 layer|92.1%|local|~80k|13.94|
+50 layer|86.9%|1ps-1wk|~80k|10.19|
+50 layer|88.5%|8ps-8wk|~80k|19.19|
+
+
 
 ![Precisions](g3doc/cifar_resnet.gif)
 

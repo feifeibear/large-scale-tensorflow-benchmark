@@ -68,7 +68,7 @@ class ResNet(object):
   def _build_model(self):
     """Build the core model within the graph."""
     if FLAGS.dataset == 'cifar10':
-      network = resnet_model_official.cifar10_resnet_v2_generator(resnet_size= 32, num_classes = self.hps.num_classes, data_format=None)
+      network = resnet_model_official.cifar10_resnet_v2_generator(resnet_size=50, num_classes = self.hps.num_classes, data_format=None)
     elif FLAGS.dataset == 'imagenet':
       network = resnet_model_official.imagenet_resnet_v2(resnet_size = 50, num_classes = self.hps.num_classes, data_format=None)
 
@@ -114,19 +114,11 @@ class ResNet(object):
     update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
     with tf.control_dependencies(update_ops):
       self.train_op = optimizer.minimize(self.cost, self.global_step)
-
-    # trainable_variables = tf.trainable_variables()
-    # grads = tf.gradients(self.cost, trainable_variables)
-    # apply_op = optimizer.apply_gradients(
-    #     zip(grads, trainable_variables),
-    #     global_step=self.global_step, name='train_step')
-    # train_ops = [apply_op] + self._extra_train_ops
-    # self.train_op = tf.group(*train_ops)
-
 # dist sync init
 
     if FLAGS.job_name != None and FLAGS.sync_replicas:
       is_chief = (FLAGS.task_index == 0)
+      self.replicas_hook = optimizer.make_session_run_hook(is_chief)
       self.local_init_op = optimizer.local_step_init_op
       if is_chief:
         self.local_init_op = optimizer.chief_init_op
