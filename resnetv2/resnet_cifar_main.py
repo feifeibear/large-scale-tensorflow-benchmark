@@ -259,8 +259,10 @@ def train(hps, server = None):
         self._lrn_rate = 0.1
       elif train_step < 60000:
         self._lrn_rate = 0.01
-      else:
+      elif train_step < 80000:
         self._lrn_rate = 0.001
+      else:
+        self._lrn_rate = 0.0001
 
   if FLAGS.job_name == None: 
     #serial version
@@ -282,6 +284,7 @@ def train(hps, server = None):
         master=server.target,
         is_chief=is_chief,
         checkpoint_dir=FLAGS.log_root,
+        save_checkpoint_secs=60,
         hooks=[logging_hook, _LearningRateSetterHook()],
         chief_only_hooks=[model.replicas_hook, summary_hook],
         # Since we provide a SummarySaverHook, we need to disable default

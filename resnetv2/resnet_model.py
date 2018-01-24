@@ -57,22 +57,22 @@ class ResNet(object):
 
     self._extra_train_ops = []
 
-  def build_graph(self):
+  def build_graph(self, istrain = True):
     """Build a whole graph for the model."""
     self.global_step = tf.train.get_or_create_global_step()
-    self._build_model()
+    self._build_model(istrain)
     if self.mode == 'train':
       self._build_train_op()
     self.summaries = tf.summary.merge_all()
 
-  def _build_model(self):
+  def _build_model(self, istrain):
     """Build the core model within the graph."""
     if FLAGS.dataset == 'cifar10':
       network = resnet_model_official.cifar10_resnet_v2_generator(resnet_size=50, num_classes = self.hps.num_classes, data_format=None)
     elif FLAGS.dataset == 'imagenet':
       network = resnet_model_official.imagenet_resnet_v2(resnet_size = 50, num_classes = self.hps.num_classes, data_format=None)
 
-    logits = network(self._images, True)
+    logits = network(self._images, istrain)
     self.predictions = tf.nn.softmax(logits)
     cross_entropy = tf.losses.softmax_cross_entropy(
 	      logits=logits, onehot_labels=self.labels
@@ -106,7 +106,7 @@ class ResNet(object):
 
       optimizer = tf.train.SyncReplicasOptimizer(
           optimizer,
-          replicas_to_aggregate=replicas_to_aggregate,
+          replicas_to_aggregate=FLAGS.replicas_to_aggregate,
           total_num_replicas=FLAGS.replicas_to_aggregate,
           name="resnet_sync_replicas")
 

@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=cifar
 #SBATCH --time=3:30:00
-#SBATCH --nodes=9
+#SBATCH --nodes=17
 #SBATCH --constraint=gpu
 #SBATCH --output=dist_cifar.%j.log
 
@@ -44,6 +44,7 @@ export TF_EVAL_FLAGS="
   --eval_dir=./tmp/resnet_model/test \
   --dataset=${DATASET} \
   --mode=eval \
+  --dataset='cifar10' \
   --num_gpus=1
 "
 
@@ -58,8 +59,13 @@ export TF_NUM_WORKERS=$2 # $SLURM_JOB_NUM_NODES
 # run distributed TensorFlow
 DIST_TF_LAUNCHER_SCRIPT=run_dist_train_eval_daint.sh
 DIST_TF_LAUNCHER_DIR=./logs/$1-ps-$2-wk-${DATASET}-log #$SCRATCH/run_dist_tf_daint_directory
-rm -rf $DIST_TF_LAUNCHER_DIR/*.log
-rm -rf $DIST_TF_LAUNCHER_DIR/*.sh
+if [ $3 ]; then
+  echo "remove previous checkpoints"
+  rm -rf $DIST_TF_LAUNCHER_DIR
+else
+  rm -rf $DIST_TF_LAUNCHER_DIR/*.log
+  rm -rf $DIST_TF_LAUNCHER_DIR/*.sh
+fi
 mkdir -p $DIST_TF_LAUNCHER_DIR
 cp ${DIST_TF_LAUNCHER_SCRIPT} $DIST_TF_LAUNCHER_DIR
 cd $DIST_TF_LAUNCHER_DIR

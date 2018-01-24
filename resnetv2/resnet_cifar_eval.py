@@ -51,7 +51,7 @@ def evaluate(hps):
   images, labels = cifar_input.build_input(
       FLAGS.dataset, FLAGS.eval_data_path, batch_size, FLAGS.mode)
   model = resnet_model.ResNet(hps, images, labels, FLAGS.mode)
-  model.build_graph()
+  model.build_graph(False)
   saver = tf.train.Saver()
   summary_writer = tf.summary.FileWriter(FLAGS.eval_dir)
 
