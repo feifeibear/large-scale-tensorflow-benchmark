@@ -34,9 +34,14 @@ global batch size = 128
 
 CIFAR-10 Model|Best Precision|PS-WK |Steps|Speed (stp/sec)
 --------------|--------------|------|-----|--------------
-50 layer|92.5%|local|~80k|13.94
-50 layer|88.5%|1ps-1wk|~80k|10.19
-50 layer|88.5%|8ps-8wk|~80k|19.19
+50 layer|93.6%|local|~80k|13.94
+50 layer|85.2%|1ps-1wk|~80k|10.19
+50 layer|86.4%|2ps-4wk|~80k|20.3
+50 layer|87.3%|4ps-8wk|~60k|19.19
+
+I met the same problem with SyncReplicaOptimzor as mentioned in
+[github issue](https://github.com/tensorflow/tensorflow/issues/6976)
+[tensorflow](https://stackoverflow.com/questions/42006967/scalability-issues-related-to-distributed-tensorflow)
 
 
 <b>Results in Tensorflow Model Research:</b>

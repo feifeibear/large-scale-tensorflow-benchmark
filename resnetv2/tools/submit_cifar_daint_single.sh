@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name=resnet
-#SBATCH --time=01:15:00
+#SBATCH --job-name=cifar-single
+#SBATCH --time=02:15:00
 #SBATCH --nodes=2
 #SBATCH --constraint=gpu
 #SBATCH --output=s-cifar_%j.log
