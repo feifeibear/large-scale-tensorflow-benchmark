@@ -255,7 +255,7 @@ def train(hps, server = None):
 
     def after_run(self, run_context, run_values):
       train_step = run_values.results
-      num_batch_per_epoch = _NUM_IMAGES['train'] // FLAGS.batch_size;
+      num_batch_per_epoch = _NUM_IMAGES['train'] // (FLAGS.batch_size * FLAGS.replicas_to_aggregate);
       if train_step < 82 * num_batch_per_epoch:
         self._lrn_rate = 0.1
       elif train_step < 123 * num_batch_per_epoch:
@@ -325,7 +325,8 @@ def main(_):
 
     # Get the number of workers.
     num_workers = len(worker_spec)
-    FLAGS.replicas_to_aggregate = num_workers
+    if(FLAGS.replicas_to_aggregate == None)
+        FLAGS.replicas_to_aggregate = num_workers
 
     cluster = tf.train.ClusterSpec({
         "ps": ps_spec,
