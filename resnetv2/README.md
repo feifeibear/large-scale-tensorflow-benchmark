@@ -1,4 +1,5 @@
-<font size=4><b>Distributed ResNet on Cifar and Imagenet Dataset.</b></font>
+<font size=8><b>Distributed ResNet on Cifar and Imagenet Dataset.</b></font>
+
 This Repo contains the code for Distributed ResNet Training.
 contact: Jiarui Fang (fjr14@mails.tsinghua.edu.cn)
 I met the same problem with SyncReplicaOptimzor as mentioned in
@@ -31,6 +32,7 @@ Distributed Versions get lower eval accuracy results as provided in [Tensorflow 
 2. ImageNet
 We set global batch size as 128\*8 = 1024.
 Follows the Hyperparameter settting in [Intel-Caffe](https://github.com/intel/caffe/tree/master/models/intel_optimized_models/multinode/resnet_50_8_nodes)
+
 ImageNet Model|Best Precision|PS-WK |Steps|Speed (stp/sec)
 --------------|--------------|------|-----|--------------
 50 layer|62.6%| 8-ps-8wk| ~76k | 0.93
@@ -44,9 +46,9 @@ Piz Daint dose not provide a Bazel combining with its default TensorFlow. Instea
 
 2. Download ImageNet Dataset to Daint
 To avoid the error raised from unrecognition of the relative directory path, the following modification should made in download_and_preprocess_imagenet.sh.
-# old:
+### old:
 WORK_DIR="$0.runfiles/inception/inception"
-# new:
+### new:
 WORK_DIR="$(realpath -s "$0").runfiles/inception/inception"
 After few days, you will see the following data in your data path.
 Due to the file system of Daint dose not support storage of millions of files, I deleted raw-data directory.

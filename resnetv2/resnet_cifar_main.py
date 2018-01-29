@@ -255,14 +255,15 @@ def train(hps, server = None):
 
     def after_run(self, run_context, run_values):
       train_step = run_values.results
-      if train_step < 40000:
+      num_batch_per_epoch = _NUM_IMAGES['train'] // FLAGS.batch_size;
+      if train_step < 82 * num_batch_per_epoch:
         self._lrn_rate = 0.1
-      elif train_step < 60000:
+      elif train_step < 123 * num_batch_per_epoch:
         self._lrn_rate = 0.01
-      elif train_step < 80000:
+      elif train_step < 300 * num_batch_per_epoch:
         self._lrn_rate = 0.001
       else:
-        self._lrn_rate = 0.0001
+        self._lrn_rate = 0.0002
 
   if FLAGS.job_name == None: 
     #serial version
